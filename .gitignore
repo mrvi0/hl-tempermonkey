@@ -1,0 +1,8 @@
+concurent_url/
+*.tmp
+test*
+*.example
+json-search-replace/
+template*
+*.txt
+temp*
