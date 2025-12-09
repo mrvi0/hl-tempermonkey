@@ -7,6 +7,8 @@
 // @match        https://app.hotellab.io/lk/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=hotellab.io
 // @grant        none
+// @updateURL    https://raw.githubusercontent.com/mrvi0/hl-tempermonkey/main/forecast-filter/forecast-filter.js
+// @downloadURL  https://raw.githubusercontent.com/mrvi0/hl-tempermonkey/main/forecast-filter/forecast-filter.js
 // ==/UserScript==
 
 (function() {

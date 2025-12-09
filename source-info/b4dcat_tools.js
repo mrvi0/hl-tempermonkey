@@ -7,6 +7,8 @@
 // @match        https://app.hotellab.ru/*
 // @grant        none
 // @run-at       document-idle
+// @updateURL    https://raw.githubusercontent.com/mrvi0/hl-tempermonkey/main/source-info/b4dcat_tools.js
+// @downloadURL  https://raw.githubusercontent.com/mrvi0/hl-tempermonkey/main/source-info/b4dcat_tools.js
 // ==/UserScript==
 
 (function() {

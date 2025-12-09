@@ -7,6 +7,8 @@
 // @match        *://*/*
 // @grant        GM_addStyle
 // @run-at       document-idle
+// @updateURL    https://raw.githubusercontent.com/mrvi0/hl-tempermonkey/main/hotel-id-finder/tl_bnovo_finder.js
+// @downloadURL  https://raw.githubusercontent.com/mrvi0/hl-tempermonkey/main/hotel-id-finder/tl_bnovo_finder.js
 // ==/UserScript==
 
 (function() {
