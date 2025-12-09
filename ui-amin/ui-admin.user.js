@@ -9,8 +9,8 @@
 // @grant        GM_getValue
 // @grant        GM_addStyle
 // @run-at       document-idle
-// @updateURL    https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/ui-amin/ui-admin.user.js
-// @downloadURL  https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/ui-amin/ui-admin.user.js
+// @updateURL    https://github.com/mrvi0/hl-tempermonkey/raw/refs/heads/main/ui-amin/ui-admin.user.js
+// @downloadURL  https://github.com/mrvi0/hl-tempermonkey/raw/refs/heads/main/ui-amin/ui-admin.user.js
 // ==/UserScript==
 
 (function() {
