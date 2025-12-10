@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         TravelLine & Bnovo ID Finder
+// @name         TravelLine, Bnovo & Booking ID Finder
 // @namespace    http://tampermonkey.net/
-// @version      0.6
-// @description  Finds and displays TravelLine hotel code or Bnovo UID from network requests
+// @version      0.7
+// @description  Finds and displays TravelLine hotel code, Bnovo UID, or Booking.com hotel ID from network requests and page scripts
 // @author       Mr Vi
 // @match        *://*/*
 // @grant        GM_addStyle
@@ -14,7 +14,7 @@
 (function() {
     'use strict';
 
-    let foundIdInfo = null; // Will store { type: 'travelline'/'bnovo', code: '...', alias: '...' }
+    let foundIdInfo = null; // Will store { type: 'travelline'/'bnovo'/'booking', code: '...', alias: '...', urlId: '...' }
     const displayElementId = 'tl-bnovo-id-display-9a8b7c'; // Unique ID
 
     function displayFoundId(info) {
@@ -25,6 +25,8 @@
             displayText = info.alias ? `${info.alias}_${info.code}` : `travelline_${info.code}`;
         } else if (info.type === 'bnovo') {
             displayText = `bnovo_${info.code}`;
+        } else if (info.type === 'booking') {
+            displayText = `b_hotel_id: ${info.code}`;
         } else {
             return; // Unknown type
         }
@@ -87,13 +89,15 @@
         idText.textContent = displayText;
         displayDiv.appendChild(idText);
 
-        // Add Hotellab button for both types
-        const hotellabBtn = document.createElement('a');
-        hotellabBtn.className = 'external-link-btn';
-        hotellabBtn.textContent = 'HL';
-        hotellabBtn.target = '_blank';
-        hotellabBtn.href = `https://admin.hotellab.io/hotel?id=${info.code}&source=${info.type}`;
-        displayDiv.appendChild(hotellabBtn);
+        // Add Hotellab button for travelline and bnovo
+        if (info.type === 'travelline' || info.type === 'bnovo') {
+            const hotellabBtn = document.createElement('a');
+            hotellabBtn.className = 'external-link-btn';
+            hotellabBtn.textContent = 'HL';
+            hotellabBtn.target = '_blank';
+            hotellabBtn.href = `https://admin.hotellab.io/hotel?id=${info.code}&source=${info.type}`;
+            displayDiv.appendChild(hotellabBtn);
+        }
 
         // Add ReservationSteps button only for bnovo
         if (info.type === 'bnovo') {
@@ -103,6 +107,27 @@
             reservationBtn.target = '_blank';
             reservationBtn.href = `https://reservationsteps.ru/rooms/index/${info.code}`;
             displayDiv.appendChild(reservationBtn);
+        }
+
+        // Add HotelLab buttons for booking (two buttons: one for URL ID, one for URL ID + .en-gb)
+        if (info.type === 'booking' && info.urlId) {
+            // First button: URL ID (e.g., de_radisson-sas-berlin)
+            const parserBtn1 = document.createElement('a');
+            parserBtn1.className = 'external-link-btn';
+            parserBtn1.textContent = 'P1';
+            parserBtn1.target = '_blank';
+            parserBtn1.href = `https://admin.hotellab.io/hotel?id=${info.urlId}&source=booking`;
+            parserBtn1.title = `HotelLab: ${info.urlId}`;
+            displayDiv.appendChild(parserBtn1);
+
+            // Second button: URL ID + .en-gb (e.g., de_radisson-sas-berlin.en-gb)
+            const parserBtn2 = document.createElement('a');
+            parserBtn2.className = 'external-link-btn';
+            parserBtn2.textContent = 'P2';
+            parserBtn2.target = '_blank';
+            parserBtn2.href = `https://admin.hotellab.io/hotel?id=${info.urlId}.en-gb&source=booking`;
+            parserBtn2.title = `HotelLab: ${info.urlId}.en-gb`;
+            displayDiv.appendChild(parserBtn2);
         }
 
         console.log(`[ID Finder] Displaying: ${displayText}`);
@@ -130,6 +155,52 @@
                     return alias;
                 }
             }
+        }
+        
+        return null;
+    }
+
+    function extractBookingIdFromScripts() {
+        // Ищем скрипты с booking.env.b_hotel_id
+        const scripts = document.querySelectorAll('script');
+        
+        for (const script of scripts) {
+            const content = script.textContent || script.innerHTML;
+            
+            // Ищем паттерн: booking.env.b_hotel_id = '68441';
+            const hotelIdMatch = content.match(/booking\.env\.b_hotel_id\s*=\s*['"]([^'"]+)['"]/);
+            
+            if (hotelIdMatch && hotelIdMatch[1]) {
+                const hotelId = hotelIdMatch[1];
+                console.log(`[ID Finder] Found Booking hotel ID: ${hotelId}`);
+                return hotelId;
+            }
+        }
+        
+        return null;
+    }
+
+    function extractBookingUrlId() {
+        // Извлекаем ID из URL Booking.com
+        // Пример: https://www.booking.com/hotel/de/radisson-sas-berlin.ru.html
+        // Результат: de_radisson-sas-berlin
+        try {
+            const currentUrl = window.location.href;
+            // Ищем паттерн: booking.com/hotel/... до .html или конца строки или параметров
+            // Захватываем все символы до .html, ?, # или конца строки
+            const bookingMatch = currentUrl.match(/booking\.com\/hotel\/(.+?)(?:\.html|$|\?|#)/);
+            
+            if (bookingMatch && bookingMatch[1]) {
+                let urlId = bookingMatch[1];
+                // Убираем расширение .ru, .en, .de и т.д. если оно осталось
+                urlId = urlId.replace(/\.(ru|en|de|fr|es|it|pl|nl|pt|ja|zh|ko|ar|tr|cs|da|el|fi|he|hu|id|ms|no|ro|sk|sv|th|uk|vi|bg|hr|is|lt|lv|mk|mt|sr|sl|et|ga|cy|lb|sq|hy|az|ka|kk|ky|uz|mn|my|ne|si|ta|te|ml|kn|gu|pa|bn|or|as|mr|sa|sd|ur|hi|lo|km|am|ti|om|so|sw|zu|xh|af|st|tn|ve|ts|ss|nr|nso)$/, '');
+                // Заменяем все слеши на подчеркивания (de/radisson-sas-berlin -> de_radisson-sas-berlin)
+                urlId = urlId.replace(/\//g, '_');
+                console.log(`[ID Finder] Found Booking URL ID: ${urlId}`);
+                return urlId;
+            }
+        } catch (e) {
+            console.warn('[ID Finder] Error extracting Booking URL ID:', e);
         }
         
         return null;
@@ -171,6 +242,22 @@
             // Invalid URL or other error, ignore for cleaner console
             // console.warn('[ID Finder] Error parsing URL:', urlString, e);
         }
+        return null;
+    }
+
+    function extractBookingIdInfo() {
+        // Извлекаем информацию о Booking.com отеле
+        const hotelId = extractBookingIdFromScripts();
+        const urlId = extractBookingUrlId();
+        
+        if (hotelId) {
+            return {
+                type: 'booking',
+                code: hotelId,
+                urlId: urlId || null
+            };
+        }
+        
         return null;
     }
 
@@ -229,6 +316,20 @@
             }
         }
         
+        // Проверяем Booking.com на текущей странице
+        if (window.location.hostname.includes('booking.com')) {
+            const bookingInfo = extractBookingIdInfo();
+            if (bookingInfo) {
+                if (!foundIdInfo || foundIdInfo.type !== bookingInfo.type || foundIdInfo.code !== bookingInfo.code) {
+                    console.log(`[ID Finder] Found Booking ID: ${bookingInfo.code}`);
+                    foundIdInfo = bookingInfo;
+                    displayFoundId(foundIdInfo);
+                } else {
+                    displayFoundId(foundIdInfo);
+                }
+            }
+        }
+        
         // Также проверим alias в скриптах, если у нас есть TravelLine ID но нет alias
         if (foundIdInfo && foundIdInfo.type === 'travelline' && !foundIdInfo.alias) {
             const alias = extractAliasFromScripts();
@@ -254,10 +355,19 @@
         displayFoundId(foundIdInfo);
     }
 
+    // Проверяем Booking.com сразу при загрузке
+    if (window.location.hostname.includes('booking.com')) {
+        const initialBookingInfo = extractBookingIdInfo();
+        if (initialBookingInfo) {
+            foundIdInfo = initialBookingInfo;
+            displayFoundId(foundIdInfo);
+        }
+    }
+
     // Additional checks with small delay for resources loading slightly after 'document-idle'
     setTimeout(checkExistingResources, 1000);
     setTimeout(checkExistingResources, 3000);
 
-    console.log('[ID Finder] Initialized. Listening for TravelLine/Bnovo IDs...');
+    console.log('[ID Finder] Initialized. Listening for TravelLine/Bnovo/Booking IDs...');
 
 })();
