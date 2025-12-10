@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         TravelLine, Bnovo & Booking ID Finder
 // @namespace    http://tampermonkey.net/
-// @version      0.7
+// @version      0.8
 // @description  Finds and displays TravelLine hotel code, Bnovo UID, or Booking.com hotel ID from network requests and page scripts
 // @author       Mr Vi
 // @match        *://*/*
@@ -114,7 +114,7 @@
             // First button: URL ID (e.g., de_radisson-sas-berlin)
             const parserBtn1 = document.createElement('a');
             parserBtn1.className = 'external-link-btn';
-            parserBtn1.textContent = 'P1';
+            parserBtn1.textContent = 'HL1';
             parserBtn1.target = '_blank';
             parserBtn1.href = `https://admin.hotellab.io/hotel?id=${info.urlId}&source=booking`;
             parserBtn1.title = `HotelLab: ${info.urlId}`;
@@ -123,7 +123,7 @@
             // Second button: URL ID + .en-gb (e.g., de_radisson-sas-berlin.en-gb)
             const parserBtn2 = document.createElement('a');
             parserBtn2.className = 'external-link-btn';
-            parserBtn2.textContent = 'P2';
+            parserBtn2.textContent = 'HL2';
             parserBtn2.target = '_blank';
             parserBtn2.href = `https://admin.hotellab.io/hotel?id=${info.urlId}.en-gb&source=booking`;
             parserBtn2.title = `HotelLab: ${info.urlId}.en-gb`;
