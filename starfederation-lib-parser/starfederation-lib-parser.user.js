@@ -40,6 +40,40 @@
 
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+  const RACE_NAMES = new Set([
+    'Гелионы',
+    'Тормали',
+    'Мруны',
+    'Зекты',
+    'Велиды',
+    'Гларги',
+    'Астоксы',
+    'Борги',
+    'Квазаары',
+  ]);
+
+  function isRaceLabel(text) {
+    const t = normalizeWhitespace(text || '');
+    if (!t) return false;
+    if (RACE_NAMES.has(t)) return true;
+    // на всякий — иногда в дереве может быть "Гелионы (…)"
+    for (const r of RACE_NAMES) {
+      if (t.startsWith(r + ' ')) return true;
+      if (t.startsWith(r + '(')) return true;
+    }
+    return false;
+  }
+
+  function simpleHash(str) {
+    // легковесный 32-bit hash (для дедупа контента)
+    let h = 5381;
+    const s = String(str || '');
+    for (let i = 0; i < s.length; i++) {
+      h = ((h << 5) + h) ^ s.charCodeAt(i); // djb2 xor
+    }
+    return (h >>> 0).toString(16);
+  }
+
   function nowIsoSafe() {
     return new Date().toISOString().replace(/[:.]/g, '-');
   }
@@ -972,6 +1006,7 @@
     const discoveredArticles = new Set();
     const collectedArticles = new Set();
     const pages = [];
+    const contentDedup = new Map(); // contentHash -> firstId
 
     const limit = CFG.maxWndHelpPages;
     const unlimited = limit == null || limit === 0 || limit < 0;
@@ -1034,13 +1069,80 @@
       q.push(s);
     };
 
+    const getTreeItemTextSafe = (id) => {
+      try {
+        if (typeof tree.getItemText === 'function') return tree.getItemText(id) || '';
+      } catch {
+        // ignore
+      }
+      // fallback: иногда текст лежит в _idpull
+      try {
+        const rec = tree._idpull && tree._idpull[id] ? tree._idpull[id] : null;
+        if (rec && typeof rec.text === 'string') return rec.text;
+        if (rec && typeof rec.label === 'string') return rec.label;
+      } catch {
+        // ignore
+      }
+      return '';
+    };
+
+    const getParentIdSafe = (id) => {
+      try {
+        if (typeof tree.getParentId === 'function') return tree.getParentId(id);
+      } catch {
+        // ignore
+      }
+      return null;
+    };
+
+    const getAncestorTexts = (id, maxDepth = 6) => {
+      const out = [];
+      let cur = id;
+      for (let i = 0; i < maxDepth; i++) {
+        const p = getParentIdSafe(cur);
+        if (p == null || p === '' || p === cur) break;
+        const t = normalizeWhitespace(getTreeItemTextSafe(p));
+        if (t) out.push(t);
+        cur = p;
+      }
+      return out;
+    };
+
+    const isInsideRacesSection = (id) => {
+      // Если где-то выше по дереву есть "Расы" / "Раса" — это настоящий раздел рас, его НЕ пропускаем.
+      const ancestors = getAncestorTexts(id, 10);
+      return ancestors.some((t) => /(^|\s)расы($|\s)/i.test(t) || /(^|\s)раса($|\s)/i.test(t));
+    };
+
+    const isSkippableRaceNode = (id) => {
+      const text = getTreeItemTextSafe(id);
+      const s = String(id);
+
+      // Ветку "Расы" и статьи внутри неё нужно собирать
+      if (isInsideRacesSection(s)) return false;
+
+      // Пропускаем только "расовые" узлы, которые являются подветкой у предмета/технологии и т.п.
+      // Признаки: текст узла = имя расы
+      if (isRaceLabel(text)) return true;
+
+      // Иногда подветки могут иметь id вида Races-<num> (но это не всегда сам раздел "Расы").
+      // Если это НЕ внутри настоящего раздела "Расы" — пропускаем.
+      if (/^Races-\d+/i.test(s)) return true;
+
+      return false;
+    };
+
     const noteArticle = (id) => {
       const s = String(id);
       if (!/^[A-Za-z]+-\d+/.test(s)) return;
+      if (isSkippableRaceNode(s)) return;
       discoveredArticles.add(s);
     };
 
     const openAndCollectArticle = async (articleId, prevFp) => {
+      // Не собираем дубль-ветки по расам (Гелионы/Тормали/…)
+      if (isSkippableRaceNode(articleId)) return prevFp;
+
       setStatus(`справочник: сбор (${pages.length + 1}) ${articleId}`);
 
       try {
@@ -1069,6 +1171,13 @@
       }
 
       if (data && (data.content || '').trim().length > 0) {
+        // Дедуп по контенту: ветки по расам часто дают одинаковый текст
+        const key = simpleHash(`${data.title}\n${data.content}`);
+        if (contentDedup.has(key)) {
+          // помечаем как обработанное, но не добавляем дубль в pages
+          return (data.content || '').slice(0, 200);
+        }
+        contentDedup.set(key, articleId);
         pages.push(data);
         return (data.content || '').slice(0, 200);
       }
