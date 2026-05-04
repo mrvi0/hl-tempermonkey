@@ -1,16 +1,20 @@
 // ==UserScript==
 // @name         Star Federation — универсальный парсер справочника
 // @namespace    tempermoneky.starfederation.lib
-// @version      1.2.0
+// @version      1.3.2
 // @description  Эвристический сбор title/контента/категорий/ссылок, лог JSON из fetch/XHR, опциональный обход 5–10 страниц. Только starfederation.ru
 // @author       Mr Vi
 // @match        https://starfederation.ru/*
 // @match        https://www.starfederation.ru/*
+// @match        https://spacefederation.ru/*
 // @grant        GM_download
 // @grant        GM_addStyle
+// @grant        GM_setValue
+// @grant        GM_getValue
 // @grant        unsafeWindow
 // @connect      starfederation.ru
 // @connect      www.starfederation.ru
+// @connect      spacefederation.ru
 // @run-at       document-idle
 // ==/UserScript==
 
@@ -36,7 +40,41 @@
     jsonPreviewChars: 1200,
     uiZIndex: 2147483647,
     sameOriginOnly: true,
+    /** Каждые N собранных страниц — авто-скачивание JSON-фрагмента (0 = выкл.; включай вручную при необходимости) */
+    wndHelpDownloadEvery: 0,
+    /** Дублировать прогресс в хранилище Tampermonkey (id + компактные страницы) */
+    wndHelpPersistToStorage: true,
   };
+
+  const GM_KEY_IDS = 'sf_wndhelp_collected_ids_v1';
+  const GM_KEY_PAGES = 'sf_wndhelp_pages_blob_v1';
+
+  function storageGetJson(key, defVal) {
+    try {
+      let raw = null;
+      if (typeof GM_getValue === 'function') raw = GM_getValue(key, null);
+      if (raw == null) raw = localStorage.getItem(key);
+      if (raw == null || raw === '') return defVal;
+      if (typeof raw === 'object') return raw;
+      return JSON.parse(String(raw));
+    } catch {
+      return defVal;
+    }
+  }
+
+  function storageSetJson(key, val) {
+    const s = JSON.stringify(val);
+    try {
+      if (typeof GM_setValue === 'function') GM_setValue(key, s);
+    } catch {
+      // ignore
+    }
+    try {
+      localStorage.setItem(key, s);
+    } catch {
+      // ignore
+    }
+  }
 
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -61,6 +99,11 @@
       if (t.startsWith(r + ' ')) return true;
       if (t.startsWith(r + '(')) return true;
     }
+    // подпись в дереве с цветом/span, без дублирования в RACE_NAMES
+    const m = t.match(
+      new RegExp(`^(${Array.from(RACE_NAMES).join('|')})\\b`, 'i')
+    );
+    if (m) return true;
     return false;
   }
 
@@ -981,6 +1024,8 @@
   async function traverseWndHelpTreeAndCollectPages(opts) {
     const treeEl = opts && opts.treeEl ? opts.treeEl : null;
     const setStatus = opts && typeof opts.setStatus === 'function' ? opts.setStatus : () => {};
+    const run = opts && opts.run ? opts.run : { stop: false, pages: [] };
+    if (!Array.isArray(run.pages)) run.pages = [];
 
     let tree = null;
     try {
@@ -1005,8 +1050,35 @@
     const visitedNodes = new Set();
     const discoveredArticles = new Set();
     const collectedArticles = new Set();
-    const pages = [];
+    const pages = run.pages;
     const contentDedup = new Map(); // contentHash -> firstId
+
+    const savedIds = CFG.wndHelpPersistToStorage ? storageGetJson(GM_KEY_IDS, []) : [];
+    if (Array.isArray(savedIds)) {
+      for (const sid of savedIds) collectedArticles.add(String(sid));
+    }
+
+    let partCounter = 0;
+    const persistIds = () => {
+      if (!CFG.wndHelpPersistToStorage) return;
+      storageSetJson(GM_KEY_IDS, Array.from(collectedArticles));
+    };
+
+    const maybeAutoDownload = () => {
+      const n = CFG.wndHelpDownloadEvery;
+      if (!n || n <= 0) return;
+      if (pages.length > 0 && pages.length % n === 0) {
+        partCounter += 1;
+        downloadJson(`starfederation-wndhelp-part-${String(partCounter).padStart(3, '0')}-${nowIsoSafe()}.json`, {
+          collected_at: new Date().toISOString(),
+          part: partCounter,
+          source: 'WndHelp_treecontent',
+          note: 'авто-фрагмент; полный итог — в конце прогона или по кнопке «Скачать сейчас»',
+          pages: pages.slice(),
+        });
+        console.log('[SF][WNDHELP_PART]', partCounter, pages.length);
+      }
+    };
 
     const limit = CFG.maxWndHelpPages;
     const unlimited = limit == null || limit === 0 || limit < 0;
@@ -1109,25 +1181,146 @@
     };
 
     const isInsideRacesSection = (id) => {
-      // Если где-то выше по дереву есть "Расы" / "Раса" — это настоящий раздел рас, его НЕ пропускаем.
-      const ancestors = getAncestorTexts(id, 10);
-      return ancestors.some((t) => /(^|\s)расы($|\s)/i.test(t) || /(^|\s)раса($|\s)/i.test(t));
+      // Настоящий «раздел про рас/навыки/описание» — в заголовке категории по-разному, не только «Расы».
+      const ancestors = getAncestorTexts(id, 12);
+      return ancestors.some((t) => {
+        const n = (t || '').toLowerCase();
+        if (n.includes('распредел') && n.includes('рас')) return true;
+        if (n.includes('федера') && n.includes('рас') && n.includes('навык')) return true;
+        if (n.includes('навык') && n.includes('рас')) return true;
+        if (n.includes('описан') && n.includes('рас')) return true;
+        if (/(^|[^а-яё0-9])расы([^а-яё0-9]|$)/i.test(t)) return true;
+        if (/(^|[^а-яё0-9])раса([^а-яё0-9]|$)/i.test(t)) return true;
+        return false;
+      });
+    };
+
+    const getItemImageSafe = (nodeId) => {
+      const nid = String(nodeId);
+      try {
+        if (typeof tree.getItemImage === 'function') {
+          const a = tree.getItemImage(nid);
+          if (a) return String(a);
+        }
+      } catch {
+        // ignore
+      }
+      try {
+        const r = tree._idpull && tree._idpull[nid] ? tree._idpull[nid] : null;
+        if (r) {
+          return String(r.im0 || r.im1 || r.image || r.im || r.icon || '');
+        }
+      } catch {
+        // ignore
+      }
+      return '';
+    };
+
+    const imagePathIsRacePortrait = (img) => {
+      const s = String(img || '').toLowerCase();
+      return s.includes('races/') || s.includes('race');
+    };
+
+    const imagePathIsObjectOrTechTopic = (img) => {
+      const s = String(img || '').toLowerCase();
+      if (!s) return false;
+      return (
+        s.includes('productions/') ||
+        s.includes('buildings/') ||
+        s.includes('building/') ||
+        s.includes('sciences/') ||
+        s.includes('ships/') ||
+        s.includes('ship/') ||
+        s.includes('ship_hull') ||
+        s.includes('shiphull') ||
+        s.includes('hull/') ||
+        s.includes('components/') ||
+        s.includes('shipcomponents') ||
+        s.includes('modules/') ||
+        s.includes('hull') ||
+        s.includes('hulls/') ||
+        s.includes('carcass/') ||
+        s.includes('blueprint/') ||
+        s.includes('weapons/') ||
+        s.includes('weapon/') ||
+        s.includes('equip/') ||
+        s.includes('device/') ||
+        s.includes('turret/') ||
+        s.includes('engine/') ||
+        s.includes('shield/') ||
+        s.includes('dron/') ||
+        s.includes('part/') ||
+        s.includes('mount/') ||
+        s.includes('slot/') ||
+        s.includes('items/') ||
+        s.includes('item/') ||
+        s.includes('production/') ||
+        s.includes('facilit') ||
+        s.includes('facilities') ||
+        s.includes('colony/') ||
+        s.includes('colonies/') ||
+        s.includes('orbital/') ||
+        s.includes('planets/') ||
+        s.includes('planet/') ||
+        s.includes('station/') ||
+        s.includes('defense/') ||
+        s.includes('mine/') ||
+        s.includes('mines/') ||
+        s.includes('workshop/') ||
+        s.includes('factory/')
+      );
+    };
+
+    const idLooksLikeEntityBranch = (idd) => {
+      const s = String(idd);
+      return /^(productions?|buildings?|sciences?|ships?|ship|shiphulls?|hulls?|hull|components?|modules?|items?|weapons?|equipments?|colonies?|orbitals?|planets?|stations?|defenses?|bases?)-/i.test(
+        s
+      );
+    };
+
+    // ветка предмета/корабля/модуля/постройки/корпуса по подписи (без иконки)
+    const ANCESTOR_ITEM_TEXT_RE =
+      /(компонент|корабл|корпус|корпуса|снаряжен|силуэт|модул|оруди|турел|установ|двигател|ракет|луч|пуш|щит|дрон|трюм|ангар|систем|блок|корабельн|флот|построй|здан|сооруж|орбитал|космобаз|планетар|шахт|рудник|фабрик|энерг|реактор|обвес|монтаж|слот|ячейк|секци|отсек|брон[ея]+|оформлен|проекты?\s*корпус)/i;
+
+    const hasObjectTopicAncestor = (id) => {
+      let cur = getParentIdSafe(id);
+      for (let d = 0; d < 25 && cur != null && cur !== ''; d++) {
+        if (isInsideRacesSection(cur)) return false;
+        const pimg = getItemImageSafe(cur);
+        if (imagePathIsObjectOrTechTopic(pimg)) return true;
+        const ptext = getTreeItemTextSafe(cur);
+        if (ptext && ANCESTOR_ITEM_TEXT_RE.test(ptext) && !isInsideRacesSection(cur)) {
+          if (!/распредел|навык.*рас|федерац.*рас|описан.*рас/i.test(ptext)) return true;
+        }
+        if (idLooksLikeEntityBranch(cur)) return true;
+        cur = getParentIdSafe(cur);
+      }
+      return false;
     };
 
     const isSkippableRaceNode = (id) => {
       const text = getTreeItemTextSafe(id);
       const s = String(id);
-
-      // Ветку "Расы" и статьи внутри неё нужно собирать
       if (isInsideRacesSection(s)) return false;
 
-      // Пропускаем только "расовые" узлы, которые являются подветкой у предмета/технологии и т.п.
-      // Признаки: текст узла = имя расы
-      if (isRaceLabel(text)) return true;
+      const selfImg = getItemImageSafe(s);
+      const selfLooksRace =
+        isRaceLabel(text) || imagePathIsRacePortrait(selfImg) || /^Races-\d+/i.test(s);
+      if (!selfLooksRace) return false;
 
-      // Иногда подветки могут иметь id вида Races-<num> (но это не всегда сам раздел "Расы").
-      // Если это НЕ внутри настоящего раздела "Расы" — пропускаем.
-      if (/^Races-\d+/i.test(s)) return true;
+      // Ключ: расы-ветки внутри предметов/модулей/тех/корпусов (иконка предка — productions/buildings/…)
+      if (hasObjectTopicAncestor(s)) return true;
+
+      // Родитель-«предмет» часто с иконкой production/building, дети с races/* — дубли
+      const p = getParentIdSafe(s);
+      if (p != null && p !== '' && !isInsideRacesSection(p)) {
+        if (imagePathIsObjectOrTechTopic(getItemImageSafe(p)) && (isRaceLabel(text) || imagePathIsRacePortrait(selfImg)))
+          return true;
+      }
+
+      // id Races-n вне «раздела про рас» и под объектной веткой
+      if (/^Races-\d+/i.test(s) && hasObjectTopicAncestor(s)) return true;
+      if (/^Races-\d+/i.test(s) && p != null && imagePathIsObjectOrTechTopic(getItemImageSafe(p))) return true;
 
       return false;
     };
@@ -1140,6 +1333,7 @@
     };
 
     const openAndCollectArticle = async (articleId, prevFp) => {
+      if (run && run.stop) return prevFp;
       // Не собираем дубль-ветки по расам (Гелионы/Тормали/…)
       if (isSkippableRaceNode(articleId)) return prevFp;
 
@@ -1179,11 +1373,15 @@
         }
         contentDedup.set(key, articleId);
         pages.push(data);
+        persistIds();
+        maybeAutoDownload();
         return (data.content || '').slice(0, 200);
       }
 
       if (data) {
         pages.push({ ...data, error: 'empty_content' });
+        persistIds();
+        maybeAutoDownload();
         return (data.content || '').slice(0, 200);
       }
 
@@ -1198,6 +1396,8 @@
         raw_html: '',
         error: 'no_WndHelp_content',
       });
+      persistIds();
+      maybeAutoDownload();
       return prevFp;
     };
 
@@ -1208,6 +1408,7 @@
     let prevContentFp = null;
 
     while (queue.length) {
+      if (run && run.stop) break;
       const nodeId = queue.shift();
       if (nodeId == null) continue;
       steps++;
@@ -1250,13 +1451,16 @@
       // Инкрементально собираем всё, что уже нашли
       if (discoveredArticles.size) {
         for (const id of Array.from(discoveredArticles)) {
+          if (run && run.stop) break;
           if (collectedArticles.has(id)) continue;
           if (!unlimited && pages.length >= Math.max(1, limit)) break;
           collectedArticles.add(id);
+          persistIds();
           prevContentFp = await openAndCollectArticle(id, prevContentFp);
         }
       }
 
+      if (run && run.stop) break;
       if (!unlimited && pages.length >= Math.max(1, limit)) break;
     }
 
@@ -1264,6 +1468,7 @@
       pages,
       total_ids: discoveredArticles.size,
       collected_pages: pages.length,
+      stopped: !!(run && run.stop),
     };
   }
 
@@ -1533,6 +1738,9 @@
         <button type="button" id="__sf_crawl__">Авто 5–10</button>
         <button type="button" id="__sf_openhelp__">Открыть справочник</button>
         <button type="button" id="__sf_helpcollect__">Собрать справочник</button>
+        <button type="button" id="__sf_helpstop__">Стоп</button>
+        <button type="button" id="__sf_helpdown__">Скачать сейчас</button>
+        <button type="button" id="__sf_helpclear__">Сбросить прогресс</button>
       </div>
       <div class="row"><small>Логи JSON: <code>[SF][JSON]</code> / <code>[SF][JSONDATA]</code></small></div>
     `;
@@ -1601,8 +1809,40 @@
       }
     });
 
+    const run = { stop: false, pages: [] };
+    PAGE.__sf_help_run = run;
+
+    panel.querySelector('#__sf_helpstop__')?.addEventListener('click', () => {
+      run.stop = true;
+      setStatus('стоп: завершу текущий шаг…');
+    });
+
+    panel.querySelector('#__sf_helpdown__')?.addEventListener('click', () => {
+      if (!run.pages || !run.pages.length) {
+        setStatus('нет данных для скачивания (запусти сбор)');
+        return;
+      }
+      downloadJson(`starfederation-wndhelp-now-${nowIsoSafe()}.json`, {
+        collected_at: new Date().toISOString(),
+        source: 'WndHelp_treecontent',
+        note: 'снимок текущего прогресса (можно в любой момент)',
+        total_ids: 0,
+        collected_pages: run.pages.length,
+        pages: run.pages.slice(),
+      });
+      setStatus(`скачано (фрагмент ${run.pages.length} стр.)`);
+    });
+
+    panel.querySelector('#__sf_helpclear__')?.addEventListener('click', () => {
+      run.stop = true;
+      storageSetJson(GM_KEY_IDS, []);
+      setStatus('прогресс id сброшен; перезапусти «Собрать справочник»');
+    });
+
     panel.querySelector('#__sf_helpcollect__')?.addEventListener('click', async () => {
       try {
+        run.stop = false;
+        run.pages = [];
         setStatus('справочник: ожидание дерева…');
         openWndHelp();
         const tree = await waitForElement('#WndHelp_treecontent', 20000);
@@ -1615,19 +1855,28 @@
         const res = await traverseWndHelpTreeAndCollectPages({
           treeEl: tree,
           setStatus,
+          run,
         });
 
         const bundle = {
           collected_at: new Date().toISOString(),
           source: 'WndHelp_treecontent',
+          stopped: res.stopped,
           total_ids: res.total_ids,
           collected_pages: res.collected_pages,
           pages: res.pages,
         };
 
         console.log('[SF][WNDHELP_RESULT]', bundle);
-        downloadJson(`starfederation-wndhelp-${nowIsoSafe()}.json`, bundle);
-        setStatus(`справочник: готово (${res.collected_pages} стр.)`);
+        const name = res.stopped
+          ? `starfederation-wndhelp-stopped-${nowIsoSafe()}.json`
+          : `starfederation-wndhelp-${nowIsoSafe()}.json`;
+        downloadJson(name, bundle);
+        setStatus(
+          res.stopped
+            ? `остановлено (${res.collected_pages} стр. в файле)`
+            : `готово (${res.collected_pages} стр.)`
+        );
       } catch (e) {
         console.error('[SF] help collect failed', e);
         setStatus('ошибка сбора справочника');
