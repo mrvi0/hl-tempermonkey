@@ -1,74 +1,51 @@
 # Tampermonkey Scripts для HotelLab
 
-Коллекция пользовательских скриптов для улучшения работы с платформой HotelLab и связанными системами.
+Коллекция пользовательских скриптов для HotelLab / RevLab и связанных систем.
 
-## 📦 Проекты
+## Структура
 
-### 🔗 [URL Collector](./concurent_url/)
-**Сборщик URL** с интеграциями TravelLine, Bnovo и Ostrovok  
-Автоматически собирает и сохраняет URL сайтов с идентификаторами отелей в Google Sheets.
+| Папка | Назначение |
+|---|---|
+| [admin-json-toolkit/](./admin-json-toolkit/) | **Admin JSON Toolkit** — поиск/замена JSON, Base Price, редактор конкурентов |
+| [ui-admin/](./ui-admin/) | UI Admin Helper — скрытие/сворачивание блоков Django Admin (отдельно) |
+| [url-collector/](./url-collector/) | Сборщик URL (TravelLine / Ostrovok) |
+| [forecast-filter/](./forecast-filter/) | Фильтр прогнозов в ЛК HotelLab |
+| [source-info/](./source-info/) | B4DCAT Tools — метки провайдеров в Rate Shopper / Calendar |
+| [hotel-id-finder/](./hotel-id-finder/) | Поиск ID отелей TL / Bnovo / Booking |
+| [page-speed/](./page-speed/) | Замер скорости страницы и критичных XHR |
+| [starfederation-lib-parser/](./starfederation-lib-parser/) | Парсер справочника Звёздной Федерации |
+| [personal/](./personal/) | Личные скрипты |
+| [shared/](./shared/) | Справочники: паттерны кода, UI-kit (не ставятся в Tampermonkey) |
+| [_deprecated/](./_deprecated/) | Устаревшие скрипты (не для установки) |
 
-### 📊 [Forecast Filter](./forecast-filter/)
-**Фильтр прогнозов отелей** для HotelLab  
-Добавляет фильтры по статусам прогнозов (Красный, Желтый, Зеленый, Белый) прямо в интерфейс таблицы.
+## Shared
 
-### 🔍 [JSON Search & Replace](./json-search-replace/)
-**Глобальный поиск и замена** в JSON конфигурациях HotelLab  
-Массовый поиск и замена текста во всех JSON редакторах с предварительным просмотром и синхронизацией данных.
+- [shared/PATTERNS.md](./shared/PATTERNS.md) — повторяющиеся модули и соглашения для новых скриптов
+- [shared/ui-kit/](./shared/ui-kit/) — **UI kit** (канон стилей **Retro**, dark)
+  - [TOKENS.md](./shared/ui-kit/TOKENS.md) — CSS-токены (обязательно при любой UI-работе)
+  - [index.html](./shared/ui-kit/index.html) — интерактивный каталог компонентов
+  - [README.md](./shared/ui-kit/README.md)
+- [shared/logging/](./shared/logging/) — **логирование в консоли**
+  - [LOGGING.md](./shared/logging/LOGGING.md) — API и правила
+  - [hlt-log.js](./shared/logging/hlt-log.js) — модуль для copy-paste
+  - [index.html](./shared/logging/index.html) — симуляции действий/ошибок
 
-### 🎨 [UI Admin Helper](./ui-amin/)
-**Утилита для Django Admin панели**  
-Управление отображением блоков: сворачивание/разворачивание, скрытие архивных сезонов и категорий.
+Открыть UI-kit из Windows:  
+`\\wsl$\Ubuntu\home\vi\projects\tempermoneky\shared\ui-kit\index.html`  
 
-### 🛠️ [B4DCAT Tools](./source-info/)
-**Расширение Rate Shopper и Calendar**  
-Добавляет метки провайдеров (T/B/O) и улучшает интерфейс для работы с конкурентами.
+Логирование demo:  
+`\\wsl$\Ubuntu\home\vi\projects\tempermoneky\shared\logging\index.html`
 
-### 🔎 [Hotel ID Finder](./hotel-id-finder/)
-**Поиск ID отелей** TravelLine и Bnovo  
-Находит и отображает коды отелей из сетевых запросов на странице.
+Cursor подхватывает канон через [`.cursor/rules/ui-kit-retro.mdc`](./.cursor/rules/ui-kit-retro.mdc) (`alwaysApply`).
 
-### 🌌 [Star Federation Lib Parser](./starfederation-lib-parser/)
-**Парсер справочника** для [Звёздной Федерации](https://starfederation.ru/)  
-Сбор текста, заголовков, ссылок и логов JSON с сайта, опционально обход нескольких страниц.
+## Быстрый старт
 
----
+1. Установите [Tampermonkey](https://www.tampermonkey.net/) или [Violentmonkey](https://violentmonkey.github.io/)
+2. Откройте `.user.js` нужного проекта
+3. Создайте скрипт в расширении, вставьте код, сохраните
 
-## 🚀 Быстрый старт
+## Лицензия
 
-1. Установите расширение [Tampermonkey](https://www.tampermonkey.net/)
-2. Перейдите в папку нужного проекта
-3. Откройте файл `.user.js`
-4. Скопируйте код и создайте новый скрипт в Tampermonkey
-5. Сохраните и активируйте скрипт
+См. [LICENSE](./LICENSE). Коммерческое использование без указания автора запрещено.
 
-Подробные инструкции по установке находятся в каждом проекте.
-
----
-
-## 📋 Требования
-
-- Браузер с поддержкой расширений (Chrome, Firefox, Edge, Safari)
-- Расширение [Tampermonkey](https://www.tampermonkey.net/) или [Violentmonkey](https://violentmonkey.github.io/)
-- Доступ к соответствующим сервисам (HotelLab, Google Sheets и т.д.)
-
----
-
-## 📝 Лицензия
-
-Все проекты распространяются под строгой лицензией. См. файл [LICENSE](./LICENSE).
-
-**Важно:** Использование в коммерческих проектах запрещено без указания автора.
-
----
-
-## 👤 Автор
-
-**Mr Vi**
-
----
-
-## ⚠️ Отказ от ответственности
-
-Эти скрипты предоставляются "как есть", без каких-либо гарантий. Используйте на свой страх и риск.
-
+Автор: **Mr Vi**

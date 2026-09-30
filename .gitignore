@@ -1,8 +1,10 @@
-concurent_url/
+# Root-only legacy folder names (moved/renamed)
+/concurent_url/
+/json-search-replace/
+
 *.tmp
 test*
 *.example
-json-search-replace/
 template*
 *.txt
 temp*

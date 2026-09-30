@@ -1,5 +1,9 @@
 # UI Admin Helper
 
+> **Отдельно от Admin JSON Toolkit.** JSON Search / Base Price / Competitors — в [`../admin-json-toolkit/`](../admin-json-toolkit/).  
+> UI Admin остаётся своим userscript: кнопка слева снизу, токены темы C ([`../shared/ui-kit/TOKENS.md`](../shared/ui-kit/TOKENS.md)).
+
+
 Утилита для управления отображением блоков в Django Admin панели HotelLab.
 
 ## 📋 Описание
