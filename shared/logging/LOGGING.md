@@ -52,7 +52,7 @@ jsr.group('classify records', () => {
 | `Toolkit/JSR` | JSON Search |
 | `Toolkit/BP` | Base Price |
 | `Toolkit/Competitors` | Competitors |
-| `UIAdmin` | UI Admin |
+| `HideEl` | Hide Elements (опционально; v2 без логов) |
 
 ### Уровни
 
@@ -103,4 +103,4 @@ jsr.group('classify records', () => {
 ## Где уже подключено
 
 - `admin-json-toolkit/admin-json-toolkit.user.js` — `Toolkit` / `JSR` / `BP` / `Competitors` (legacy `log()` → bridge)
-- `ui-admin/ui-admin.user.js` — `UIAdmin`
+- `hide-elements/hide-elements.user.js` — без HLTLog (v2)

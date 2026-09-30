@@ -124,9 +124,9 @@
       level: 'error',
     },
 
-    // UI Admin
+    // Hide Elements (legacy name in comments)
     UI_BLOCK_NOT_FOUND: {
-      title: 'Блок UI Admin не найден в DOM',
+      title: 'Блок Hide Elements не найден в DOM',
       hint: 'Проверь id блока / разметку Admin',
       level: 'warn',
     },

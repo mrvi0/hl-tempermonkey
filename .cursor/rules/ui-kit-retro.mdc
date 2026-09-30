@@ -5,7 +5,7 @@ alwaysApply: true
 
 # HotelLab userscripts — UI kit canon
 
-When working on **any** userscript, Admin JSON Toolkit, UI Admin, or new Tampermonkey UI in this repository:
+When working on **any** userscript, Admin JSON Toolkit, Hide Elements, or new Tampermonkey UI in this repository:
 
 ## Must read first
 
@@ -29,8 +29,8 @@ When working on **any** userscript, Admin JSON Toolkit, UI Admin, or new Tamperm
 ## Product UX
 
 - **Admin JSON Toolkit** (JSON Search + Competitors + Base Price): **one** on-page launcher; sections via **tabs** inside one shell.
-- **UI Admin**: separate userscript; settings via **Tampermonkey menu** (`GM_registerMenuCommand`), not a floating page button.
-- Do not put UI Admin into the toolkit dock.
+- **Hide Elements** (бывший UI Admin): separate userscript; toggles via **Tampermonkey menu** (`GM_registerMenuCommand`), not a floating page button. JSON collapse chevrons may stay on-page.
+- Do not put Hide Elements into the toolkit dock.
 
 ## Code patterns
 

@@ -89,7 +89,7 @@
 
 Кнопки · input/select/textarea · **range** · checkbox · radio · **toggle** · **tabs** · **tooltip** · **dropdown** · **pagination** · status/pill/toast · **diff** · **calendar** (in-range / selected) · table sticky · card/modal/full-shell · loader/skeleton/empty · **один** toolkit launcher (не три отдельные кнопки на странице).
 
-UI Admin — **не** плавающая кнопка; опции через Tampermonkey `GM_registerMenuCommand`.
+Hide Elements — **не** плавающая кнопка; опции через Tampermonkey `GM_registerMenuCommand`.
 
 Классы в userscripts: префикс `hlt-` (например `hlt-btn-primary`), чтобы не конфликтовать с Django Admin.
 

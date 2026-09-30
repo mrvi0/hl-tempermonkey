@@ -7,7 +7,7 @@
 | Папка | Назначение |
 |---|---|
 | [admin-json-toolkit/](./admin-json-toolkit/) | **Admin JSON Toolkit** — поиск/замена JSON, Base Price, редактор конкурентов |
-| [ui-admin/](./ui-admin/) | UI Admin Helper — скрытие/сворачивание блоков Django Admin (отдельно) |
+| [hide-elements/](./hide-elements/) | **Hide Elements** — скрытие блоков AdminOnly через меню TM (бывший UI Admin) |
 | [url-collector/](./url-collector/) | Сборщик URL (TravelLine / Ostrovok) |
 | [forecast-filter/](./forecast-filter/) | Фильтр прогнозов в ЛК HotelLab |
 | [source-info/](./source-info/) | B4DCAT Tools — метки провайдеров в Rate Shopper / Calendar |

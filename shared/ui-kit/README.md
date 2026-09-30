@@ -16,6 +16,6 @@
 4. Не изобретать новую палитру, пока пользователь явно не попросит сменить канон
 
 Admin JSON Toolkit = один launcher на странице, вкладки внутри.  
-UI Admin = меню расширения Tampermonkey, не dock на странице.
+Hide Elements = меню расширения Tampermonkey, не dock на странице.
 
 Логирование: см. [`../logging/`](../logging/) (`HLTLog`, Retro badges в console).

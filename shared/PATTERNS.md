@@ -12,7 +12,7 @@ Preview компонентов: [ui-kit/index.html](./ui-kit/index.html).
 
 ## 1. Metadata / match
 
-Admin JSON Toolkit и UI Admin:
+Admin JSON Toolkit и Hide Elements:
 
 ```
 // @match  https://app.hotellab.io/*/AdminOnly/mainApp/hotels/*
@@ -26,7 +26,7 @@ Admin JSON Toolkit и UI Admin:
 ```
 
 `@grant none` — по умолчанию для toolkit.  
-`GM_setValue` / `GM_getValue` — только если нужны настройки между сессиями (UI Admin).
+`GM_setValue` / `GM_getValue` — только если нужны настройки между сессиями (Hide Elements).
 
 Оборачивать всё в IIFE:
 
@@ -173,7 +173,7 @@ function showToast(message, { error = false } = {}) {
 </div>
 ```
 
-UI Admin **не** входит в этот dock — отдельный скрипт, своя кнопка (можно визуально рядом, но свой userscript).
+Hide Elements **не** входит в этот dock — отдельный скрипт, тумблеры только в меню Tampermonkey.
 
 Z-index: dock `99990`, overlays `99995+`.
 

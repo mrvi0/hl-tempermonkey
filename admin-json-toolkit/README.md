@@ -23,4 +23,4 @@
 Канон стилей: Retro — [`../shared/ui-kit/TOKENS.md`](../shared/ui-kit/TOKENS.md).  
 Логи: `HLTLog` — [`../shared/logging/LOGGING.md`](../shared/logging/LOGGING.md) (в консоли `[HLT:Toolkit/…]`, debug через toggle JSR).
 
-**UI Admin** — отдельный скрипт: [`../ui-admin/`](../ui-admin/).
+**Hide Elements** — отдельный скрипт: [`../hide-elements/`](../hide-elements/).
