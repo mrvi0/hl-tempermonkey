@@ -1,0 +1,33 @@
+---
+description: After each completed action, make logical conventional commits; end replies with short hash + subject
+alwaysApply: true
+---
+
+# Auto conventional commits
+
+This project rule **overrides** “only commit when asked”: in this repo the agent **must** commit after finishing work, before the final reply.
+
+## When to commit
+
+1. After each **completed logical unit of work** (feature, fix, refactor slice, docs/rules change) — not one mega-commit for unrelated things.
+2. **Before** ending the assistant turn / final user-facing answer for that work.
+3. If several independent changes landed in one turn, make **several** commits (logical split), then answer.
+
+## Commit style
+
+- **Conventional Commits**: `feat|fix|refactor|docs|chore|style|test|perf(scope?): subject`
+- Userscripts: follow `userscript-versioning.mdc` — bump `@version` and put `(vX.Y.Z)` in the subject when a `.user.js` changed.
+- HEREDOC for the message; no `--no-verify`; no force push; no amend unless the user’s amend rules allow it.
+- Do not commit secrets (`.env`, credentials). Do not commit unless there are real changes.
+
+## End of reply
+
+After commits, include a short line (or list) with **short hash + full subject** for each new commit, e.g.:
+
+`a1b2c3d feat(hide-elements): TM menu toggles (v2.0.0)`
+
+If nothing to commit (clean tree), say so briefly — do not create an empty commit.
+
+## Push
+
+Push only when the user asks (or an existing explicit project habit for that task). Committing ≠ pushing.
