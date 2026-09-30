@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HLT Console Logging — Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Sans+3:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --font-ui: "Source Sans 3", system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, monospace;
+      --page-bg: #0f1419;
+      --panel: #1a222b;
+      --surface: #151c24;
+      --input-bg: #121820;
+      --text: #e8eef3;
+      --muted: #9aa8b5;
+      --border: #2d3a46;
+      --accent: #6fcb9f;
+      --accent-hover: #8fd9b5;
+      --accent-soft: #666547;
+      --accent-soft-fg: #ffe28a;
+      --accent-contrast: #0c1a14;
+      --strong: #fb2e01;
+      --strong-contrast: #1a0500;
+      --warn: #ffe28a;
+      --danger: #fb2e01;
+      --radius: 10px;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: var(--font-ui); color: var(--text);
+      background: var(--page-bg); line-height: 1.45; min-height: 100vh;
+    }
+    .page { max-width: 1180px; margin: 0 auto; padding: 24px 18px 80px; }
+    h1 { margin: 0 0 6px; font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+    h2 { margin: 28px 0 10px; font-size: 17px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    h3 { margin: 0 0 10px; font-size: 14px; font-weight: 700; }
+    .lead { color: var(--muted); margin: 0 0 14px; max-width: 70ch; }
+    .path-box {
+      font-family: var(--font-mono); font-size: 12px; background: #020617; color: #e5e7eb;
+      border: 1px solid var(--border); padding: 10px 12px; border-radius: 8px; word-break: break-all; margin-bottom: 14px;
+    }
+    .banner {
+      background: var(--accent-soft); color: var(--accent-soft-fg); border: 1px solid #666547;
+      border-radius: var(--radius); padding: 12px 14px; margin-bottom: 16px; font-size: 14px;
+    }
+    .banner strong { color: #fffeb3; }
+    .layout { display: grid; grid-template-columns: 1fr 360px; gap: 16px; align-items: start; }
+    @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px; margin-bottom: 12px;
+    }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .btn {
+      border: 1px solid var(--border); background: var(--input-bg); color: var(--text);
+      border-radius: 8px; padding: 8px 11px; font: 600 13px/1.2 var(--font-ui); cursor: pointer;
+    }
+    .btn:hover { filter: brightness(1.08); }
+    .btn-soft { background: var(--accent-soft); border-color: #666547; color: var(--accent-soft-fg); }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-contrast); }
+    .btn-strong { background: var(--strong); border-color: var(--strong); color: #fff; font-weight: 800; }
+    .btn-warn { border-color: #8a7420; color: var(--warn); }
+    .btn-danger { border-color: #7a2010; color: #ff8a6e; }
+    .hint { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+    .mirror-wrap {
+      position: sticky; top: 12px; background: var(--panel); border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; max-height: calc(100vh - 24px);
+      display: flex; flex-direction: column;
+    }
+    .mirror-head {
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--surface);
+    }
+    .mirror-head strong { font-size: 13px; }
+    #mirror {
+      flex: 1; overflow: auto; padding: 10px; font-family: var(--font-mono); font-size: 11px;
+      line-height: 1.45; min-height: 320px;
+    }
+    .m-line { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #1e2833; }
+    .m-meta { color: var(--muted); }
+    .m-ns { color: #ffe28a; }
+    .badge {
+      display: inline-block; padding: 1px 5px; border-radius: 3px; font-weight: 700; margin-right: 4px;
+    }
+    .b-debug { background: #2d3a46; color: #9aa8b5; }
+    .b-info { background: #1a222b; color: #e8eef3; border: 1px solid #2d3a46; }
+    .b-ok { background: #1e3a30; color: #6fcb9f; }
+    .b-warn { background: #3d3210; color: #ffe28a; }
+    .b-error { background: #4a1208; color: #ff8a6e; }
+    .m-msg { color: var(--text); }
+    .m-payload {
+      margin-top: 4px; color: #9aa8b5; white-space: pre-wrap; word-break: break-word;
+      background: var(--input-bg); border-radius: 6px; padding: 6px 8px; border: 1px solid var(--border);
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>HLT Console Logging</h1>
+    <p class="lead">
+      Канон логов для userscripts (Retro). Открой DevTools → <strong>Console</strong> и жми кнопки —
+      симуляции действий и ошибок. Ошибки через <code>log.fail(CODE)</code> — русский текст + код.
+    </p>
+    <div class="path-box">\\wsl$\Ubuntu\home\vi\projects\tempermoneky\shared\logging\index.html</div>
+    <div class="banner">
+      Смотри <strong>браузерную консоль</strong> (F12). Справа — зеркало тех же записей на странице.
+      Документация: <span style="font-family:var(--font-mono)">LOGGING.md</span> · модуль <span style="font-family:var(--font-mono)">hlt-log.js</span>
+    </div>
+
+    <div class="layout">
+      <div>
+        <div class="card">
+          <h3>Управление логгером</h3>
+          <div class="row">
+            <button type="button" class="btn btn-soft" id="btn-boot">Boot всех модулей</button>
+            <button type="button" class="btn" id="btn-level-debug">Level: debug</button>
+            <button type="button" class="btn" id="btn-level-warn">Level: warn+</button>
+            <button type="button" class="btn btn-warn" id="btn-clear-mirror">Очистить mirror</button>
+            <button type="button" class="btn" id="btn-clear-console">console.clear()</button>
+            <button type="button" class="btn btn-soft" id="btn-list-codes">Список кодов (RU)</button>
+          </div>
+          <p class="hint">Level warn+ скрывает debug/info/ok — удобно для «тихого» режима.</p>
+        </div>
+
+        <h2>1. Toolkit shell</h2>
+        <div class="card">
+          <div class="row">
+            <button type="button" class="btn btn-primary" data-sim="toolkit.open">Открыть Toolkit</button>
+            <button type="button" class="btn" data-sim="toolkit.tab">Смена вкладки → Competitors</button>
+            <button type="button" class="btn" data-sim="toolkit.close">Закрыть</button>
+            <button type="button" class="btn btn-danger" data-sim="toolkit.boot-fail">Ошибка boot модуля</button>
+          </div>
+        </div>
+
+        <h2>2. JSON Search &amp; Replace</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Действия</h3>
+            <div class="row">
+              <button type="button" class="btn btn-soft" data-sim="jsr.wait">waitForElements</button>
+              <button type="button" class="btn" data-sim="jsr.scan">Скан редакторов</button>
+              <button type="button" class="btn btn-primary" data-sim="jsr.search">Поиск</button>
+              <button type="button" class="btn btn-primary" data-sim="jsr.replace">Replace + diff</button>
+              <button type="button" class="btn" data-sim="jsr.sync-parsing">Sync parsing</button>
+              <button type="button" class="btn" data-sim="jsr.sync-intercept">Sync intercept</button>
+              <button type="button" class="btn" data-sim="jsr.sync-edges">Sync price edges</button>
+              <button type="button" class="btn" data-sim="jsr.write">writeJson + JSONEditor</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Ошибки JSR</h3>
+            <div class="row">
+              <button type="button" class="btn btn-danger" data-sim="jsr.err-no-editors">Нет .for_jsoneditor</button>
+              <button type="button" class="btn btn-danger" data-sim="jsr.err-json">Невалидный JSON</button>
+              <button type="button" class="btn btn-danger" data-sim="jsr.err-regex">Ошибка regex</button>
+              <button type="button" class="btn btn-warn" data-sim="jsr.err-no-editor-ui">JSONEditor instance missing</button>
+              <button type="button" class="btn btn-danger" data-sim="jsr.err-sync">Sync failed mid-way</button>
+              <button type="button" class="btn btn-warn" data-sim="jsr.err-empty-term">Пустой поисковый термин</button>
+            </div>
+          </div>
+        </div>
+
+        <h2>3. Competitors</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Действия</h3>
+            <div class="row">
+              <button type="button" class="btn btn-soft" data-sim="comp.rescan">Пересканировать</button>
+              <button type="button" class="btn" data-sim="comp.select-source">Выбор источника цен</button>
+              <button type="button" class="btn" data-sim="comp.add">Добавить конкурента</button>
+              <button type="button" class="btn" data-sim="comp.remove">Удалить конкурента</button>
+              <button type="button" class="btn" data-sim="comp.matrix">Обновить матрицу категорий</button>
+              <button type="button" class="btn btn-primary" data-sim="comp.save-source">Сохранить источник</button>
+              <button type="button" class="btn btn-strong" data-sim="comp.save-seasons">Сохранить + сезоны (POST)</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Ошибки Competitors</h3>
+            <div class="row">
+              <button type="button" class="btn btn-danger" data-sim="comp.err-no-fields">Нет parsing/concurents</button>
+              <button type="button" class="btn btn-warn" data-sim="comp.err-no-form">Form не найдена</button>
+              <button type="button" class="btn btn-danger" data-sim="comp.err-http">POST HTTP 500</button>
+              <button type="button" class="btn btn-danger" data-sim="comp.err-django">Django validation</button>
+              <button type="button" class="btn btn-warn" data-sim="comp.err-no-source">Источник не выбран</button>
+              <button type="button" class="btn btn-warn" data-sim="comp.err-no-seasons">Сезоны не выбраны</button>
+            </div>
+          </div>
+        </div>
+
+        <h2>4. Base Price</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Действия</h3>
+            <div class="row">
+              <button type="button" class="btn" data-sim="bp.find">Найти редакторы</button>
+              <button type="button" class="btn btn-primary" data-sim="bp.process">Рассчитать base_price</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Ошибки BP</h3>
+            <div class="row">
+              <button type="button" class="btn btn-danger" data-sim="bp.err-invalid-num">Нечисловое value</button>
+              <button type="button" class="btn btn-warn" data-sim="bp.err-no-source-key">Нет min/max_price</button>
+              <button type="button" class="btn btn-danger" data-sim="bp.err-json">Битый JSON в сезоне</button>
+            </div>
+          </div>
+        </div>
+
+        <h2>5. UI Admin</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Действия (меню TM)</h3>
+            <div class="row">
+              <button type="button" class="btn" data-sim="ui.toggle-archived">Toggle архивные</button>
+              <button type="button" class="btn" data-sim="ui.toggle-rooms">Toggle категории</button>
+              <button type="button" class="btn" data-sim="ui.collapse">Collapse JSON block</button>
+              <button type="button" class="btn btn-soft" data-sim="ui.storage">GM_setValue ok</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Ошибки UI Admin</h3>
+            <div class="row">
+              <button type="button" class="btn btn-warn" data-sim="ui.err-no-block">Блок не найден в DOM</button>
+              <button type="button" class="btn btn-danger" data-sim="ui.err-gm">GM_* недоступен</button>
+            </div>
+          </div>
+        </div>
+
+        <h2>6. Общие / инфраструктура</h2>
+        <div class="card">
+          <div class="row">
+            <button type="button" class="btn" data-sim="gen.group-table">group + table</button>
+            <button type="button" class="btn" data-sim="gen.timing">time / timeEnd</button>
+            <button type="button" class="btn btn-danger" data-sim="gen.unhandled">Unhandled exception</button>
+            <button type="button" class="btn btn-danger" data-sim="gen.abort">AbortError (пользователь закрыл)</button>
+            <button type="button" class="btn btn-warn" data-sim="gen.race">Race: повторный open</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="mirror-wrap">
+        <div class="mirror-head">
+          <strong>Mirror</strong>
+          <span class="hint" style="margin:0" id="mirror-count">0</span>
+        </div>
+        <div id="mirror"></div>
+      </aside>
+    </div>
+  </div>
+
+  <script src="./hlt-log.js"></script>
+  <script>
+    (function () {
+      const mirrorEl = document.getElementById('mirror');
+      const mirrorCount = document.getElementById('mirror-count');
+      let count = 0;
+
+      function mirror(entry) {
+        count += 1;
+        mirrorCount.textContent = String(count);
+        const div = document.createElement('div');
+        div.className = 'm-line';
+        let payloadHtml = '';
+        if (entry.payload !== undefined) {
+          let text;
+          try {
+            text = typeof entry.payload === 'string'
+              ? entry.payload
+              : JSON.stringify(entry.payload, replacer, 2);
+          } catch (e) {
+            text = String(entry.payload);
+          }
+          payloadHtml = '<div class="m-payload">' + escapeHtml(text) + '</div>';
+        }
+        const codeHtml = entry.code
+          ? ' <span class="m-meta">[' + escapeHtml(entry.code) + ']</span>'
+          : '';
+        const hintHtml = entry.hint
+          ? '<div class="m-meta">hint: ' + escapeHtml(entry.hint) + '</div>'
+          : '';
+        div.innerHTML =
+          '<div class="m-meta">' + escapeHtml(entry.time) +
+          ' <span class="m-ns">[HLT:' + escapeHtml(entry.ns) + ']</span> ' +
+          '<span class="badge b-' + entry.level + '">' + entry.level.toUpperCase() + '</span>' +
+          codeHtml + '</div>' +
+          '<div class="m-msg">' + escapeHtml(entry.message) + '</div>' +
+          hintHtml +
+          payloadHtml;
+        mirrorEl.prepend(div);
+      }
+
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function replacer(key, value) {
+        if (value instanceof Error) {
+          return { name: value.name, message: value.message, stack: value.stack };
+        }
+        return value;
+      }
+
+      const root = HLTLog.create({ ns: 'Toolkit', mirror: mirror });
+      const jsr = root.child('JSR');
+      const bp = root.child('BP');
+      const comp = root.child('Competitors');
+      const ui = HLTLog.create({ ns: 'UIAdmin', mirror: mirror });
+
+      const sims = {
+        'toolkit.open': function () {
+          root.event('shell.open');
+          root.info('launcher click', { dock: '#hlt-dock' });
+          root.ok('shell mounted', { tab: 'search' });
+        },
+        'toolkit.tab': function () {
+          root.event('shell.tab', { from: 'search', to: 'competitors' });
+        },
+        'toolkit.close': function () {
+          root.event('shell.close');
+        },
+        'toolkit.boot-fail': function () {
+          try {
+            throw new TypeError("Cannot read properties of null (reading 'querySelector')");
+          } catch (e) {
+            root.fail('TOOLKIT_BOOT_FAIL', { module: 'Competitors', cause: e });
+          }
+        },
+
+        'jsr.wait': function () {
+          jsr.debug('waitForElements tick', { found: 0, retryInMs: 500 });
+          jsr.ok('editors ready', { count: 7 });
+        },
+        'jsr.scan': function () {
+          jsr.group('scan .for_jsoneditor', function () {
+            jsr.table(
+              [
+                { id: 'id_price_sources_hotels-0-config', label: 'Источник цен: Booking' },
+                { id: 'id_hotelSeasonsConfigs-0-config', label: 'Сезон: Высокий' },
+                { id: 'id_hotelSeasonsConfigs-1-config', label: 'Сезон: Низкий' },
+              ],
+              'editors'
+            );
+          });
+        },
+        'jsr.search': function () {
+          jsr.event('search.start', { term: 'hotel_title', caseSensitive: true, regex: false });
+          jsr.ok('search done', { configs: 2, matches: 5 });
+        },
+        'jsr.replace': function () {
+          jsr.event('replace.preview', { term: 'hotel_title', replace: 'hotel_name' });
+          jsr.info('diff page', { index: 0, total: 2 });
+          jsr.ok('replace applied', { configs: 2, replacements: 5 });
+        },
+        'jsr.sync-parsing': function () {
+          jsr.event('sync.parsing.start', { extraFields: ['genius', 'tax'] });
+          jsr.ok('sync.parsing done', { seasonsUpdated: 4, concurentsChanged: 12 });
+        },
+        'jsr.sync-intercept': function () {
+          jsr.event('sync.intercept.start');
+          jsr.ok('sync.intercept done', { seasonsUpdated: 4 });
+        },
+        'jsr.sync-edges': function () {
+          jsr.event('sync.priceEdges.start');
+          jsr.ok('sync.priceEdges done', { seasonsUpdated: 3 });
+        },
+        'jsr.write': function () {
+          jsr.debug('writeJson', { id: 'id_hotelSeasonsConfigs-0-config', bytes: 18432 });
+          jsr.ok('JSONEditor.set', { editorDivId: 'id_hotelSeasonsConfigs-0-config_jsoneditor' });
+        },
+        'jsr.err-no-editors': function () {
+          jsr.fail('JSR_NO_EDITORS', { selector: 'textarea.for_jsoneditor', url: location.pathname });
+        },
+        'jsr.err-json': function () {
+          try {
+            JSON.parse('{broken');
+          } catch (e) {
+            jsr.fail('JSR_INVALID_JSON', { id: 'id_hotelSeasonsConfigs-1-config', cause: e });
+          }
+        },
+        'jsr.err-regex': function () {
+          try {
+            new RegExp('(unclosed');
+          } catch (e) {
+            jsr.fail('JSR_BAD_REGEX', { pattern: '(unclosed', cause: e });
+          }
+        },
+        'jsr.err-no-editor-ui': function () {
+          jsr.fail('JSR_NO_JSONEDITOR_UI', {
+            editorDivId: 'id_…_jsoneditor',
+            hasWindowJsonEditors: false,
+          });
+        },
+        'jsr.err-sync': function () {
+          jsr.fail('JSR_SYNC_ABORT', {
+            failedSeason: 'Сезон: Высокий',
+            reason: 'profile key mismatch',
+            completed: 1,
+            total: 4,
+          });
+        },
+        'jsr.err-empty-term': function () {
+          jsr.fail('JSR_EMPTY_TERM');
+        },
+
+        'comp.rescan': function () {
+          comp.event('rescan.start');
+          comp.group('scanCurrentPageConfigs', function () {
+            comp.ok('records', { sources: 1, seasons: 2 });
+            comp.table(
+              [
+                { kind: 'source', title: 'Booking.com — main' },
+                { kind: 'season', title: 'Высокий сезон' },
+                { kind: 'season', title: 'Низкий сезон' },
+              ],
+              'classified'
+            );
+          });
+        },
+        'comp.select-source': function () {
+          comp.info('source selected', { id: 'rec_source_0', title: 'Booking.com — main' });
+        },
+        'comp.add': function () {
+          comp.ok('competitor added', { id: 'ostrovok_99' });
+        },
+        'comp.remove': function () {
+          comp.ok('competitor removed', { id: 'ostrovok_99' });
+        },
+        'comp.matrix': function () {
+          comp.debug('matrix rebuild', { profiles: 2, competitors: 3 });
+        },
+        'comp.save-source': function () {
+          comp.time('saveSource');
+          comp.event('save.source', { dirty: true });
+          comp.ok('Источник цен сохранён', { formsPosted: 1 });
+          comp.timeEnd('saveSource');
+        },
+        'comp.save-seasons': function () {
+          comp.event('save.seasons', { selected: 2, copy: ['parsing', 'history', 'forecast_history'] });
+          comp.ok('Источник и выбранные сезоны сохранены', { formsPosted: 1 });
+        },
+        'comp.err-no-fields': function () {
+          comp.fail('COMP_NO_FIELDS');
+        },
+        'comp.err-no-form': function () {
+          comp.fail('COMP_NO_FORM');
+        },
+        'comp.err-http': function () {
+          comp.fail('COMP_POST_HTTP', { status: 500, url: '/ru/AdminOnly/mainApp/hotels/12/change/' });
+        },
+        'comp.err-django': function () {
+          comp.fail('COMP_DJANGO_VALIDATION', {
+            matched: /errorlist|Please correct the error/i.source,
+          });
+        },
+        'comp.err-no-source': function () {
+          comp.fail('COMP_NO_SOURCE');
+        },
+        'comp.err-no-seasons': function () {
+          comp.fail('COMP_NO_SEASONS', { seasonsChecked: 0 });
+        },
+
+        'bp.find': function () {
+          bp.ok('editors with prices', { count: 4 });
+        },
+        'bp.process': function () {
+          bp.event('process.start', { source: 'min_price', mode: 'percent', value: 20 });
+          bp.ok('base_price written', { editors: 4, profilesTouched: 11 });
+        },
+        'bp.err-invalid-num': function () {
+          bp.fail('BP_INVALID_NUMBER', { raw: 'abc', mode: 'percent' });
+        },
+        'bp.err-no-source-key': function () {
+          bp.fail('BP_NO_SOURCE_KEY', { profile: 'Standard', source: 'max_price' });
+        },
+        'bp.err-json': function () {
+          bp.fail('BP_EDITOR_FAIL', { editorName: 'Сезон: Высокий', cause: { message: 'Unexpected token' } });
+        },
+
+        'ui.toggle-archived': function () {
+          ui.event('menu.toggleArchived', { show: false });
+          ui.ok('archived blocks hidden', { count: 3 });
+        },
+        'ui.toggle-rooms': function () {
+          ui.event('menu.toggleRoomCategories', { show: true });
+        },
+        'ui.collapse': function () {
+          ui.info('collapse block', { id: 'id_report_config', collapsed: true });
+        },
+        'ui.storage': function () {
+          ui.ok('GM_setValue', { key: 'ui_admin_show_archived', value: false });
+        },
+        'ui.err-no-block': function () {
+          ui.fail('UI_BLOCK_NOT_FOUND', { id: 'id_statistics_config' });
+        },
+        'ui.err-gm': function () {
+          ui.fail('UI_GM_UNAVAILABLE', { grant: ['GM_setValue', 'GM_getValue'] });
+        },
+
+        'gen.group-table': function () {
+          root.group('demo group', function () {
+            root.debug('nested debug');
+            root.table([{ a: 1, b: 'x' }, { a: 2, b: 'y' }], 'sample rows');
+          });
+        },
+        'gen.timing': function () {
+          root.time('fake-work');
+          setTimeout(function () {
+            root.ok('async work done');
+            root.timeEnd('fake-work');
+          }, 180);
+        },
+        'gen.unhandled': function () {
+          try {
+            null.map();
+          } catch (e) {
+            root.fail('UNHANDLED', { where: 'click handler', cause: e });
+          }
+        },
+        'gen.abort': function () {
+          const err = new DOMException('The operation was aborted.', 'AbortError');
+          root.fail('ABORTED', { cause: err });
+        },
+        'gen.race': function () {
+          root.fail('TOOLKIT_ALREADY_OPEN');
+        },
+      };
+
+      document.getElementById('btn-boot').addEventListener('click', function () {
+        root.ok('Toolkit logger ready', { version: '1.0.0', palette: 'retro' });
+        jsr.info('JSR module hooked');
+        bp.info('BP module hooked');
+        comp.info('Competitors module hooked', { network: false });
+        ui.info('UI Admin menu commands registered', {
+          commands: ['Toggle archived', 'Toggle room categories', 'Toggle users'],
+        });
+      });
+
+      document.getElementById('btn-level-debug').addEventListener('click', function () {
+        [root, jsr, bp, comp, ui].forEach(function (l) { l.setLevel('debug'); });
+        root.info('level → debug (все сообщения)');
+      });
+      document.getElementById('btn-level-warn').addEventListener('click', function () {
+        [root, jsr, bp, comp, ui].forEach(function (l) { l.setLevel('warn'); });
+        root.warn('level → warn (debug/info/ok скрыты)');
+      });
+      document.getElementById('btn-clear-mirror').addEventListener('click', function () {
+        mirrorEl.innerHTML = '';
+        count = 0;
+        mirrorCount.textContent = '0';
+      });
+      document.getElementById('btn-clear-console').addEventListener('click', function () {
+        console.clear();
+        root.info('console cleared (mirror не тронут)');
+      });
+      document.getElementById('btn-list-codes').addEventListener('click', function () {
+        const rows = HLTLog.codes().map(function (code) {
+          const e = HLTLog.ERRORS[code];
+          return { code: code, level: e.level, title: e.title, hint: e.hint };
+        });
+        root.table(rows, 'Каталог ошибок HLTLog.ERRORS');
+        root.info('Всего кодов: ' + rows.length);
+      });
+
+      document.querySelectorAll('[data-sim]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const key = btn.getAttribute('data-sim');
+          const fn = sims[key];
+          if (!fn) {
+            root.error('unknown simulation', { key: key });
+            return;
+          }
+          fn();
+        });
+      });
+
+      // auto intro
+      root.ok('Logging demo loaded — open DevTools Console');
+    })();
+  </script>
+</body>
+</html>
