@@ -1,0 +1,32 @@
+---
+description: Bump userscript @version on every change; put version in commit subject; no git tags
+alwaysApply: true
+---
+
+# Userscript versioning
+
+Applies to every `*.user.js` in this repo.
+
+## On every code change
+
+1. **Bump** the `// @version` header in the same change set (do not leave stale versions).
+2. Use **semver** (`MAJOR.MINOR.PATCH`):
+   - **PATCH** — fix, polish, copy, logging, small internal refactor with same behavior
+   - **MINOR** — new toggle/feature, renamed script/UX change users notice, new `@match` / grants
+   - **MAJOR** — breaking rename of storage keys, removed features, incompatible defaults (only when intentional)
+3. If several scripts change in one commit, bump **each** touched script’s `@version`.
+4. Keep README “current version” (if present) in sync with `@version`.
+
+## Commits
+
+- Put the new version in the **commit subject** (conventional commits), e.g.:
+  - `fix(admin-view): hide archived after AJAX reload (v1.7.1)`
+  - `feat(admin-view): move toggles to Tampermonkey menu (v2.0.0)`
+- One logical change → one version bump that matches that change.
+- **Do not** create git tags (`v1.2.3`) unless the user explicitly asks.
+
+## Do not
+
+- Ship userscript edits without a `@version` bump
+- Reuse the previous version for a new behavior change
+- Add version tags or GitHub Releases by default
