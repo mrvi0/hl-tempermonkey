@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HotelLab Userscripts — UI Kit (Dark)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Sans+3:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --font-ui: "Source Sans 3", system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, monospace;
+      --radius-ctl: 8px;
+      --radius-card: 12px;
+      --radius-btn: 8px;
+      --radius-launcher: 10px;
+
+      /* Dark shell (shared) */
+      --page-bg: #0f1419;
+      --page-text: #e8eef3;
+      --panel: #1a222b;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+      --text: #e8eef3;
+      --muted: #9aa8b5;
+      --border: #2d3a46;
+      --surface: #151c24;
+      --input-bg: #121820;
+      --chip-bg: #1a222b;
+      --danger: #f87171;
+      --ok: #4ade80;
+      --warn: #fbbf24;
+      --diff-del-bg: #3a1d1d;
+      --diff-del-fg: #f5a8a8;
+      --diff-add-bg: #1d3326;
+      --diff-add-fg: #9ee0b8;
+
+      /* Default / canon: retro */
+      --accent: #6fcb9f;
+      --accent-hover: #8fd9b5;
+      --accent-soft: #666547;
+      --accent-contrast: #0c1a14;
+      --accent-mid: #6fcb9f;
+      --accent-strong: #fb2e01;
+      --accent-strong-contrast: #1a0500;
+      --accent-soft-fg: #ffe28a;
+      --cal-range-bg: #666547;
+      --cal-range-fg: #fffeb3;
+      --warn: #ffe28a;
+      --danger: #fb2e01;
+      --diff-add-bg: #1e3a30;
+      --diff-add-fg: #6fcb9f;
+      --diff-del-bg: #4a1208;
+      --diff-del-fg: #ff8a6e;
+    }
+
+    /* Гарантируем, что calendar selected следует текущей палитре на body */
+    [data-palette] {
+      --cal-selected-bg: var(--accent);
+      --cal-selected-fg: var(--accent-contrast);
+    }
+
+    [data-palette="navy-lime"] {
+      --accent: #a3e635;
+      --accent-hover: #bef264;
+      --accent-soft: #365314;
+      --accent-contrast: #142007;
+      --accent-mid: #84cc16;
+      --accent-strong: #d9f99d;
+      --accent-strong-contrast: #1a2e05;
+      --accent-soft-fg: #d9f99d;
+      --cal-range-bg: #2a3d18;
+      --cal-range-fg: #d4f5a0;
+      --diff-add-bg: #24361a;
+      --diff-add-fg: #c5f07a;
+    }
+
+    /* From user palettes — adapted for dark shell */
+    /* Navy and Coral: #3e5172 #f9b49b #9fb6c3 #f9e9de #cc6c5c */
+    [data-palette="navy-coral"] {
+      --accent: #f9b49b;
+      --accent-hover: #f9e9de;
+      --accent-soft: #3e5172;
+      --accent-contrast: #1a1210;
+      --accent-mid: #cc6c5c;
+      --accent-strong: #cc6c5c;
+      --accent-strong-contrast: #1a0c0a;
+      --accent-soft-fg: #f9b49b;
+      --cal-range-bg: #3e5172;
+      --cal-range-fg: #f9e9de;
+      --muted: #9fb6c3;
+      --diff-add-bg: #3e5172;
+      --diff-add-fg: #f9b49b;
+      --diff-del-bg: #4a2420;
+      --diff-del-fg: #f9b49b;
+    }
+
+    /* Coral and Algae: #ef5554 #f09493 #97d9c7 #7aa48e #628c62 */
+    [data-palette="coral-algae"] {
+      --accent: #97d9c7;
+      --accent-hover: #b8e8db;
+      --accent-soft: #628c62;
+      --accent-contrast: #0f1f18;
+      --accent-mid: #7aa48e;
+      --accent-strong: #ef5554;
+      --accent-strong-contrast: #1a0808;
+      --accent-soft-fg: #97d9c7;
+      --cal-range-bg: #3d5c45;
+      --cal-range-fg: #97d9c7;
+      --diff-add-bg: #2a4034;
+      --diff-add-fg: #97d9c7;
+      --diff-del-bg: #4a1e1e;
+      --diff-del-fg: #f09493;
+      --danger: #ef5554;
+    }
+
+    /* Coral Teal Blue: #385a7c #f97171 #f99192 #8ad6cc #b2eee6 */
+    [data-palette="coral-teal"] {
+      --accent: #8ad6cc;
+      --accent-hover: #b2eee6;
+      --accent-soft: #385a7c;
+      --accent-contrast: #0a1a1a;
+      --accent-mid: #8ad6cc;
+      --accent-strong: #f97171;
+      --accent-strong-contrast: #1a0808;
+      --accent-soft-fg: #b2eee6;
+      --cal-range-bg: #385a7c;
+      --cal-range-fg: #b2eee6;
+      --diff-add-bg: #1e3d42;
+      --diff-add-fg: #8ad6cc;
+      --diff-del-bg: #4a2224;
+      --diff-del-fg: #f99192;
+      --danger: #f97171;
+    }
+
+    /* Beach: #96ceb4 #ffeead #ff6f69 #ffcc5c #88d8b0 */
+    [data-palette="beach"] {
+      --accent: #88d8b0;
+      --accent-hover: #96ceb4;
+      --accent-soft: #2a4a3c;
+      --accent-contrast: #0c1a14;
+      --accent-mid: #96ceb4;
+      --accent-strong: #ff6f69;
+      --accent-strong-contrast: #1a0808;
+      --accent-soft-fg: #96ceb4;
+      --cal-range-bg: #2a4a3c;
+      --cal-range-fg: #ffeead;
+      --diff-add-bg: #1e3a30;
+      --diff-add-fg: #88d8b0;
+      --diff-del-bg: #4a2220;
+      --diff-del-fg: #ff6f69;
+      --warn: #ffcc5c;
+      --danger: #ff6f69;
+    }
+
+    /* Cappuccino: #4b3832 #854442 #fff4e6 #3c2f2f #be9b7b */
+    [data-palette="cappuccino"] {
+      --accent: #be9b7b;
+      --accent-hover: #fff4e6;
+      --accent-soft: #4b3832;
+      --accent-contrast: #1a120e;
+      --accent-mid: #854442;
+      --accent-strong: #854442;
+      --accent-strong-contrast: #fff4e6;
+      --accent-soft-fg: #be9b7b;
+      --cal-range-bg: #3c2f2f;
+      --cal-range-fg: #fff4e6;
+      --muted: #be9b7b;
+      --diff-add-bg: #3c2f2f;
+      --diff-add-fg: #be9b7b;
+      --diff-del-bg: #4a2424;
+      --diff-del-fg: #c98a88;
+      --danger: #854442;
+      --surface: #1a1514;
+      --panel: #221c1a;
+      --input-bg: #161110;
+      --border: #3c2f2f;
+    }
+
+    /* Retro: #666547 #fb2e01 #6fcb9f #ffe28a #fffeb3 */
+    [data-palette="retro"] {
+      --accent: #6fcb9f;
+      --accent-hover: #8fd9b5;
+      --accent-soft: #666547;
+      --accent-contrast: #0c1a14;
+      --accent-mid: #6fcb9f;
+      --accent-strong: #fb2e01;
+      --accent-strong-contrast: #1a0500;
+      --accent-soft-fg: #ffe28a;
+      --cal-range-bg: #666547;
+      --cal-range-fg: #fffeb3;
+      --diff-add-bg: #1e3a30;
+      --diff-add-fg: #6fcb9f;
+      --diff-del-bg: #4a1208;
+      --diff-del-fg: #ff8a6e;
+      --warn: #ffe28a;
+      --danger: #fb2e01;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font-ui);
+      color: var(--page-text);
+      background: var(--page-bg);
+      line-height: 1.45;
+      min-height: 100vh;
+    }
+
+    .page { max-width: 1200px; margin: 0 auto; padding: 24px 18px 120px; }
+    h1 { margin: 0 0 6px; font-size: 30px; letter-spacing: -0.02em; font-weight: 800; }
+    .lead { color: var(--muted); margin: 0 0 18px; max-width: 70ch; }
+    h2 {
+      margin: 34px 0 12px; font-size: 18px; font-weight: 700;
+      border-bottom: 1px solid var(--border); padding-bottom: 8px;
+    }
+    h3 { margin: 0 0 10px; font-size: 15px; font-weight: 700; }
+    .mono, code { font-family: var(--font-mono); font-size: 12px; }
+    .path-box {
+      font-family: var(--font-mono); font-size: 12px;
+      background: #020617; color: #e5e7eb; border: 1px solid var(--border);
+      padding: 10px 12px; border-radius: 8px; word-break: break-all; margin-bottom: 16px;
+    }
+    .hint { font-size: 12px; color: var(--muted); }
+
+    .controls {
+      display: grid; gap: 12px;
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px; box-shadow: var(--shadow);
+      position: sticky; top: 10px; z-index: 60;
+    }
+    .controls-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .controls strong { font-size: 13px; min-width: 72px; }
+
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid var(--border); background: var(--chip-bg);
+      border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 600;
+      cursor: pointer; color: var(--text);
+    }
+    .chip:has(input:checked) {
+      border-color: var(--accent); background: var(--accent-soft); color: var(--accent-soft-fg);
+    }
+    .chip input { position: absolute; opacity: 0; pointer-events: none; }
+
+    .palette-cards {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 14px;
+    }
+    .palette-card {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px; cursor: pointer;
+    }
+    .palette-card.active { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .swatches { display: flex; gap: 6px; margin: 8px 0; }
+    .swatch { width: 26px; height: 26px; border-radius: 7px; border: 1px solid rgba(255,255,255,.12); }
+
+    .preview-root { color: var(--text); font-family: var(--font-ui); }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-card); padding: 16px;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+    .stack { display: grid; gap: 10px; }
+    .btn-legend {
+      font-size: 11px; color: var(--muted); font-weight: 600; width: 100%;
+      margin-top: 4px;
+    }
+
+    /* ===== Buttons: soft → primary → strong + neutrals ===== */
+    .btn {
+      border: 1px solid var(--border); background: var(--input-bg); color: var(--text);
+      border-radius: var(--radius-btn); padding: 8px 12px;
+      font: 600 13px/1.2 var(--font-ui); cursor: pointer;
+    }
+    .btn:hover { filter: brightness(1.08); }
+
+    /* Less accent than primary */
+    .btn-accent-soft {
+      background: var(--accent-soft);
+      border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+      color: var(--accent-soft-fg);
+    }
+    .btn-accent-soft:hover {
+      border-color: var(--accent);
+      filter: brightness(1.1);
+    }
+
+    /* Main accent */
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-contrast);
+    }
+    .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+    /* More accent / louder CTA */
+    .btn-accent-strong {
+      background: var(--accent-strong);
+      border-color: var(--accent-strong);
+      color: var(--accent-strong-contrast);
+      font-weight: 800;
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-strong) 40%, transparent),
+                  0 10px 28px color-mix(in srgb, var(--accent) 28%, transparent);
+    }
+    .btn-accent-strong:hover { filter: brightness(1.05); }
+
+    .btn-danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, var(--border)); }
+    .btn-ghost { border: 0; background: transparent; color: var(--accent-soft-fg); }
+    .btn-icon {
+      width: 32px; height: 32px; padding: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .btn-launcher {
+      border-radius: var(--radius-launcher);
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-contrast);
+      font-weight: 800; padding: 11px 16px;
+      box-shadow: 0 12px 28px color-mix(in srgb, var(--accent) 30%, transparent);
+    }
+
+    .field { display: grid; gap: 5px; font-size: 12px; font-weight: 700; color: var(--text); }
+    .input, .select, .textarea {
+      width: 100%; border: 1px solid var(--border); border-radius: var(--radius-ctl);
+      padding: 9px 10px; font: 14px/1.35 var(--font-ui); color: var(--text);
+      background: var(--input-bg);
+    }
+    .textarea { font-family: var(--font-mono); min-height: 80px; resize: vertical; }
+    .input:focus, .select:focus, .textarea:focus {
+      outline: 2px solid color-mix(in srgb, var(--accent) 40%, transparent);
+      border-color: var(--accent);
+    }
+
+    .choice {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 500; color: var(--text); cursor: pointer;
+      user-select: none;
+    }
+    .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; overflow: hidden; }
+    .choice-box, .choice-radio {
+      width: 18px; height: 18px; border: 2px solid var(--border);
+      background: var(--input-bg); display: inline-grid; place-items: center;
+      flex: 0 0 auto; transition: .15s ease;
+    }
+    .choice-box { border-radius: 5px; }
+    .choice-radio { border-radius: 999px; }
+    .choice input:focus-visible + .choice-box,
+    .choice input:focus-visible + .choice-radio {
+      outline: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
+      outline-offset: 2px;
+    }
+    .choice input:checked + .choice-box,
+    .choice input:checked + .choice-radio {
+      border-color: var(--accent); background: var(--accent);
+    }
+    .choice-box::after {
+      content: ""; width: 10px; height: 6px;
+      border-left: 2px solid var(--accent-contrast);
+      border-bottom: 2px solid var(--accent-contrast);
+      transform: rotate(-45deg) scale(0); margin-top: -2px; transition: transform .12s ease;
+    }
+    .choice input:checked + .choice-box::after { transform: rotate(-45deg) scale(1); }
+    .choice-radio::after {
+      content: ""; width: 8px; height: 8px; border-radius: 999px;
+      background: var(--accent-contrast); transform: scale(0); transition: transform .12s ease;
+    }
+    .choice input:checked + .choice-radio::after { transform: scale(1); }
+    .choice-group { display: flex; flex-wrap: wrap; gap: 12px 18px; }
+
+    .status { font-size: 13px; color: var(--muted); }
+    .status.ok { color: var(--ok); }
+    .status.warn { color: var(--warn); }
+    .status.error { color: var(--danger); }
+    .pill {
+      display: inline-flex; align-items: center; border-radius: 999px;
+      padding: 4px 8px; background: var(--accent-soft); color: var(--accent-soft-fg);
+      font-size: 12px; font-weight: 800;
+    }
+
+    .diff { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 800px) { .diff { grid-template-columns: 1fr; } }
+    .diff-pane {
+      border: 1px solid var(--border); border-radius: var(--radius-ctl);
+      background: var(--input-bg); overflow: hidden; min-height: 140px;
+    }
+    .diff-head {
+      padding: 8px 10px; font-size: 12px; font-weight: 800; color: var(--muted);
+      border-bottom: 1px solid var(--border); background: var(--surface);
+    }
+    .diff-body {
+      font-family: var(--font-mono); font-size: 12px; line-height: 1.55;
+      padding: 10px; white-space: pre-wrap; word-break: break-word;
+    }
+    .diff-del { background: var(--diff-del-bg); color: var(--diff-del-fg); border-radius: 3px; padding: 0 2px; }
+    .diff-add { background: var(--diff-add-bg); color: var(--diff-add-fg); border-radius: 3px; padding: 0 2px; }
+
+    /* Calendar */
+    .cal {
+      border: 1px solid var(--border); border-radius: var(--radius-card);
+      background: var(--input-bg); padding: 12px; max-width: 320px;
+    }
+    .cal-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px; gap: 8px;
+    }
+    .cal-nav strong { font-size: 14px; }
+    .cal-weekdays, .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+    }
+    .cal-weekdays span {
+      text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); padding: 4px 0;
+    }
+    .cal-day {
+      aspect-ratio: 1; border: 0; border-radius: 8px; background: transparent;
+      color: var(--text); font: 600 13px/1 var(--font-ui); cursor: pointer;
+    }
+    .cal-day:hover { background: var(--surface); }
+    .cal-day.muted { color: var(--muted); opacity: .45; }
+    .cal-day.today { box-shadow: inset 0 0 0 1.5px var(--accent); }
+    /* in-range (not endpoints): readable on dark */
+    .cal-day.in-range {
+      background: var(--cal-range-bg);
+      color: var(--cal-range-fg);
+    }
+    .cal-day.in-range:hover {
+      filter: brightness(1.12);
+    }
+    /* endpoints: текущий accent палитры (не :root lime) */
+    .cal-day.selected,
+    .cal-day.in-range.selected {
+      background: var(--accent);
+      color: var(--accent-contrast);
+    }
+    .cal-footer { margin-top: 10px; font-size: 12px; color: var(--muted); }
+
+    .table-wrap {
+      overflow: auto; border: 1px solid var(--border);
+      border-radius: var(--radius-ctl); background: var(--input-bg); max-height: 220px;
+    }
+    table.mock { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.mock th, table.mock td {
+      border-bottom: 1px solid var(--border); border-right: 1px solid var(--border);
+      padding: 8px; text-align: left; vertical-align: top;
+    }
+    table.mock th { background: var(--surface); color: var(--muted); font-weight: 800; }
+    table.mock .sticky { position: sticky; left: 0; background: var(--input-bg); z-index: 1; min-width: 140px; }
+    thead .sticky { background: var(--surface); z-index: 2; }
+
+    .toast {
+      position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(16px);
+      background: #e8eef3; color: #0f1419; padding: 12px 16px; border-radius: 10px;
+      opacity: 0; pointer-events: none; transition: .2s ease; z-index: 200; font-size: 14px;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.error { background: var(--danger); color: #1a0505; }
+
+    .fake-page {
+      border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+      background: var(--panel); min-height: 440px; position: relative;
+    }
+    .fake-topbar {
+      background: #0b1220; color: #fff; padding: 10px 14px; font-size: 13px;
+      display: flex; justify-content: space-between; border-bottom: 1px solid var(--border);
+    }
+    .fake-body { display: grid; grid-template-columns: 180px 1fr; min-height: 400px; }
+    .fake-nav { background: var(--surface); border-right: 1px solid var(--border); padding: 12px; font-size: 13px; color: var(--muted); }
+    .fake-nav div { padding: 6px 8px; border-radius: 6px; margin-bottom: 4px; }
+    .fake-nav .active { background: var(--input-bg); color: var(--text); font-weight: 700; }
+    .fake-content { padding: 16px; position: relative; background: color-mix(in srgb, var(--surface) 70%, var(--input-bg)); }
+    .fake-block {
+      background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 12px; margin-top: 8px; font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+    }
+    .dock {
+      position: absolute; right: 14px; bottom: 14px; display: flex;
+      flex-direction: column; gap: 8px; align-items: flex-end; z-index: 20;
+    }
+    .overlay {
+      position: absolute; inset: 0; background: rgba(0, 0, 0, 0.62);
+      display: none; align-items: flex-start; justify-content: center;
+      padding: 14px; z-index: 40; overflow: auto;
+    }
+    .overlay.open { display: flex; }
+    .modal-shell {
+      width: min(760px, 100%); background: var(--panel); border: 1px solid var(--border);
+      border-radius: var(--radius-card); box-shadow: var(--shadow); overflow: hidden;
+    }
+    .modal-head {
+      display: flex; justify-content: space-between; gap: 12px; align-items: flex-start;
+      padding: 14px 16px; border-bottom: 1px solid var(--border); background: var(--surface);
+    }
+    .modal-head h3 { margin: 0; font-size: 18px; }
+    .modal-head p { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+    .modal-body { padding: 16px; display: grid; gap: 12px; }
+    .full-shell {
+      width: min(980px, 100%); max-height: calc(100% - 8px); overflow: auto;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; box-shadow: var(--shadow); padding: 16px;
+    }
+    .full-layout { display: grid; grid-template-columns: 240px 1fr; gap: 12px; margin-top: 12px; }
+    @media (max-width: 800px) {
+      .full-layout, .fake-body { grid-template-columns: 1fr; }
+      .fake-nav { display: none; }
+    }
+    .side-card, .main-card {
+      background: var(--input-bg); border: 1px solid var(--border);
+      border-radius: var(--radius-card); padding: 12px;
+    }
+    .competitor {
+      border: 1px solid var(--border); border-radius: 10px; padding: 10px;
+      display: grid; gap: 6px; margin-bottom: 8px;
+    }
+    .competitor.self {
+      border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+      background: var(--accent-soft);
+    }
+    .season-item {
+      display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start;
+      border: 1px solid var(--border); border-radius: 10px; padding: 10px; cursor: pointer;
+    }
+
+    /* ===== Range ===== */
+    .range {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 6px; border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent) var(--range-pct, 35%), var(--border) var(--range-pct, 35%));
+      outline: none; cursor: pointer;
+    }
+    .range::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--accent); border: 2px solid var(--accent-contrast);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+      cursor: pointer;
+    }
+    .range::-moz-range-thumb {
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--accent); border: 2px solid var(--accent-contrast); cursor: pointer;
+    }
+
+    /* ===== Toggle switch ===== */
+    .toggle {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-size: 14px; font-weight: 500; color: var(--text); cursor: pointer; user-select: none;
+    }
+    .toggle input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+    .toggle-track {
+      width: 44px; height: 26px; border-radius: 999px;
+      background: var(--border); border: 1px solid var(--border);
+      position: relative; transition: .15s ease; flex: 0 0 auto;
+    }
+    .toggle-track::after {
+      content: ""; position: absolute; top: 2px; left: 2px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--text); transition: .15s ease;
+    }
+    .toggle input:checked + .toggle-track {
+      background: var(--accent); border-color: var(--accent);
+    }
+    .toggle input:checked + .toggle-track::after {
+      left: 20px; background: var(--accent-contrast);
+    }
+    .toggle input:focus-visible + .toggle-track {
+      outline: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
+      outline-offset: 2px;
+    }
+
+    /* ===== Tabs ===== */
+    .tabs {
+      display: flex; gap: 4px; padding: 4px;
+      background: var(--input-bg); border: 1px solid var(--border);
+      border-radius: 10px; flex-wrap: wrap;
+    }
+    .tab {
+      border: 0; background: transparent; color: var(--muted);
+      border-radius: 8px; padding: 8px 12px;
+      font: 700 13px/1.2 var(--font-ui); cursor: pointer;
+    }
+    .tab:hover { color: var(--text); background: var(--surface); }
+    .tab.active {
+      background: var(--accent-soft); color: var(--accent-soft-fg);
+    }
+    .tab-panels { margin-top: 12px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ===== Tooltip ===== */
+    .tip {
+      position: relative; display: inline-flex; align-items: center;
+    }
+    .tip-trigger {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--muted); font: 800 11px/18px var(--font-ui);
+      text-align: center; cursor: help; padding: 0;
+    }
+    .tip-bubble {
+      position: absolute; bottom: calc(100% + 8px); left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      min-width: 180px; max-width: 260px;
+      padding: 8px 10px; border-radius: 8px;
+      background: #0b1220; color: #e8eef3;
+      border: 1px solid var(--border);
+      font: 500 12px/1.4 var(--font-ui);
+      box-shadow: var(--shadow);
+      opacity: 0; pointer-events: none; transition: .12s ease; z-index: 80;
+      white-space: normal;
+    }
+    .tip-bubble::after {
+      content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      border: 6px solid transparent; border-top-color: #0b1220;
+    }
+    .tip:hover .tip-bubble,
+    .tip:focus-within .tip-bubble,
+    .tip.open .tip-bubble {
+      opacity: 1; transform: translateX(-50%) translateY(0);
+    }
+    .tip-bubble[data-place="right"] {
+      bottom: auto; left: calc(100% + 10px); top: 50%;
+      transform: translateY(-50%) translateX(-4px);
+    }
+    .tip-bubble[data-place="right"]::after {
+      top: 50%; left: auto; right: 100%;
+      transform: translateY(-50%);
+      border: 6px solid transparent; border-right-color: #0b1220;
+    }
+    .tip:hover .tip-bubble[data-place="right"],
+    .tip:focus-within .tip-bubble[data-place="right"] {
+      transform: translateY(-50%) translateX(0);
+    }
+
+    /* ===== Dropdown ===== */
+    .dropdown { position: relative; display: inline-block; }
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 6px); left: 0; min-width: 200px;
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 10px; box-shadow: var(--shadow);
+      padding: 6px; display: none; z-index: 70;
+    }
+    .dropdown.open .dropdown-menu { display: grid; gap: 2px; }
+    .dropdown-item {
+      border: 0; background: transparent; color: var(--text);
+      text-align: left; padding: 8px 10px; border-radius: 8px;
+      font: 600 13px/1.2 var(--font-ui); cursor: pointer;
+    }
+    .dropdown-item:hover { background: var(--accent-soft); color: var(--accent-soft-fg); }
+    .dropdown-item.danger { color: var(--danger); }
+    .dropdown-sep {
+      height: 1px; background: var(--border); margin: 4px 2px;
+    }
+
+    /* ===== Pagination ===== */
+    .pagination {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .page-btn {
+      min-width: 32px; height: 32px; padding: 0 8px;
+      border: 1px solid var(--border); border-radius: 8px;
+      background: var(--input-bg); color: var(--text);
+      font: 700 13px/1 var(--font-ui); cursor: pointer;
+    }
+    .page-btn:hover { border-color: var(--accent); }
+    .page-btn.active {
+      background: var(--accent); border-color: var(--accent); color: var(--accent-contrast);
+    }
+    .page-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .page-info { font-size: 13px; color: var(--muted); }
+
+    /* ===== Loader / skeleton / empty ===== */
+    .spinner {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .skeleton {
+      border-radius: 8px; background: linear-gradient(
+        90deg,
+        var(--surface) 0%,
+        color-mix(in srgb, var(--border) 55%, var(--surface)) 50%,
+        var(--surface) 100%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.2s ease-in-out infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+    .skeleton-line { height: 12px; margin-bottom: 8px; }
+    .skeleton-line.short { width: 40%; }
+    .skeleton-line.mid { width: 70%; }
+    .empty {
+      border: 1px dashed var(--border); border-radius: var(--radius-card);
+      padding: 28px 16px; text-align: center; background: var(--input-bg);
+    }
+    .empty h3 { margin: 0 0 6px; }
+    .empty p { margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+
+    .note {
+      margin-top: 28px; padding: 12px; border: 1px dashed var(--border);
+      border-radius: 12px; color: var(--muted); font-size: 13px;
+    }
+  </style>
+</head>
+<body data-palette="retro">
+  <div class="page preview-root">
+    <h1>HotelLab Userscripts — UI Kit</h1>
+    <p class="lead">
+      Только <strong>тёмная тема</strong>. Шрифты: Source Sans 3 + JetBrains Mono.
+      Канон: <strong>Retro</strong> (dark). Остальные палитры — для сравнения / экспериментов.
+    </p>
+    <div class="path-box">\\wsl$\Ubuntu\home\vi\projects\tempermoneky\shared\ui-kit\index.html</div>
+
+    <div class="controls">
+      <div class="controls-row">
+        <strong>Палитра</strong>
+        <label class="chip"><input type="radio" name="palette" value="navy-lime" /> Navy Lime</label>
+        <label class="chip"><input type="radio" name="palette" value="navy-coral" /> Navy Coral</label>
+        <label class="chip"><input type="radio" name="palette" value="coral-algae" /> Coral Algae</label>
+        <label class="chip"><input type="radio" name="palette" value="coral-teal" /> Coral Teal</label>
+        <label class="chip"><input type="radio" name="palette" value="beach" /> Beach</label>
+        <label class="chip"><input type="radio" name="palette" value="cappuccino" /> Cappuccino</label>
+        <label class="chip"><input type="radio" name="palette" value="retro" checked /> Retro ✓</label>
+      </div>
+      <div class="hint">Режим только dark. Кандидаты: Navy Coral / Coral Algae / Coral Teal / Beach / Cappuccino / Retro.</div>
+    </div>
+
+    <div class="palette-cards">
+      <div class="palette-card" data-palette-card="navy-lime">
+        <h3>Navy Lime</h3>
+        <div class="swatches">
+          <span class="swatch" style="background:#a3e635"></span>
+          <span class="swatch" style="background:#365314"></span>
+          <span class="swatch" style="background:#151c24"></span>
+        </div>
+        <div class="mono">#a3e635 · альтернатива</div>
+      </div>
+      <div class="palette-card" data-palette-card="navy-coral">
+        <h3>Navy Coral</h3>
+        <div class="swatches">
+          <span class="swatch" style="background:#3e5172"></span>
+          <span class="swatch" style="background:#f9b49b"></span>
+          <span class="swatch" style="background:#9fb6c3"></span>
+          <span class="swatch" style="background:#f9e9de"></span>
+          <span class="swatch" style="background:#cc6c5c"></span>
+        </div>
+        <div class="mono">accent #f9b49b · strong #cc6c5c · soft navy #3e5172</div>
+      </div>
+      <div class="palette-card" data-palette-card="coral-algae">
+        <h3>Coral Algae</h3>
+        <div class="swatches">
+          <span class="swatch" style="background:#ef5554"></span>
+          <span class="swatch" style="background:#f09493"></span>
+          <span class="swatch" style="background:#97d9c7"></span>
+          <span class="swatch" style="background:#7aa48e"></span>
+          <span class="swatch" style="background:#628c62"></span>
+        </div>
+        <div class="mono">accent #97d9c7 · strong CTA #ef5554 · algae soft</div>
+      </div>
+      <div class="palette-card" data-palette-card="coral-teal">
+        <h3>Coral Teal</h3>
+        <div class="swatches">
+          <span class="swatch" style="background:#385a7c"></span>
+          <span class="swatch" style="background:#f97171"></span>
+          <span class="swatch" style="background:#f99192"></span>
+          <span class="swatch" style="background:#8ad6cc"></span>
+          <span class="swatch" style="background:#b2eee6"></span>
+        </div>
+        <div class="mono">accent #8ad6cc · strong #f97171 · navy soft #385a7c</div>
+      </div>
+      <div class="palette-card" data-palette-card="beach">
+        <h3>Beach</h3>
+        <div class="swatches">
+          <span class="swatch" style="background:#96ceb4"></span>
+          <span class="swatch" style="background:#ffeead"></span>
+          <span class="swatch" style="background:#ff6f69"></span>
+          <span class="swatch" style="background:#ffcc5c"></span>
+          <span class="swatch" style="background:#88d8b0"></span>
+        </div>
+        <div class="mono">accent #88d8b0 · strong #ff6f69 · soft mint</div>
+      </div>
+      <div class="palette-card" data-palette-card="cappuccino">
+        <h3>Cappuccino</h3>
+        <div class="swatches">
+          <span class="swatch" style="background:#4b3832"></span>
+          <span class="swatch" style="background:#854442"></span>
+          <span class="swatch" style="background:#fff4e6"></span>
+          <span class="swatch" style="background:#3c2f2f"></span>
+          <span class="swatch" style="background:#be9b7b"></span>
+        </div>
+        <div class="mono">accent #be9b7b · strong #854442 · brown shell</div>
+      </div>
+      <div class="palette-card active" data-palette-card="retro">
+        <h3>Retro ✓</h3>
+        <div class="swatches">
+          <span class="swatch" style="background:#666547"></span>
+          <span class="swatch" style="background:#fb2e01"></span>
+          <span class="swatch" style="background:#6fcb9f"></span>
+          <span class="swatch" style="background:#ffe28a"></span>
+          <span class="swatch" style="background:#fffeb3"></span>
+        </div>
+        <div class="mono">КАНОН · accent #6fcb9f · strong #fb2e01 · olive soft</div>
+      </div>
+    </div>
+
+    <h2>1. Акцентные кнопки (soft → primary → strong)</h2>
+    <div class="card">
+      <div class="row" style="margin-top:0;">
+        <button type="button" class="btn btn-accent-soft" data-toast="Accent soft">Мягкий акцент</button>
+        <button type="button" class="btn btn-primary" data-toast="Primary">Основной</button>
+        <button type="button" class="btn btn-accent-strong" data-toast="Accent strong">Сильный CTA</button>
+        <button type="button" class="btn btn-launcher" data-toast="Launcher">Конкуренты</button>
+      </div>
+      <div class="btn-legend">
+        soft = второстепенное действие с оттенком акцента · primary = стандарт · strong = главный CTA на экране
+      </div>
+      <div class="row">
+        <button type="button" class="btn" data-toast="Neutral">Нейтральная</button>
+        <button type="button" class="btn btn-danger" data-toast="Danger">Удалить</button>
+        <button type="button" class="btn btn-ghost" data-toast="Ghost">Закрыть</button>
+        <button type="button" class="btn btn-icon" data-toast="Icon">×</button>
+      </div>
+    </div>
+
+    <h2>2. Поля / checkbox / radio</h2>
+    <div class="grid-2">
+      <div class="card">
+        <div class="stack">
+          <label class="field">Источник цен
+            <select class="select"><option>Booking.com</option><option>Ostrovok</option></select>
+          </label>
+          <label class="field">Hotel ID
+            <input class="input" value="bnovo_12345" />
+          </label>
+          <label class="field">JSON
+            <textarea class="textarea">{"parsing":{"selfID":"demo"}}</textarea>
+          </label>
+          <label class="field">Скролл матрицы
+            <span class="hint" id="range-label">35%</span>
+            <input class="range" id="demo-range" type="range" min="0" max="100" value="35" />
+          </label>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Checkbox</h3>
+        <div class="choice-group">
+          <label class="choice"><input type="checkbox" checked /><span class="choice-box"></span> Сезоны</label>
+          <label class="choice"><input type="checkbox" /><span class="choice-box"></span> history</label>
+          <label class="choice"><input type="checkbox" checked /><span class="choice-box"></span> Case sensitive</label>
+        </div>
+        <h3 style="margin-top:16px;">Radio</h3>
+        <div class="choice-group">
+          <label class="choice"><input type="radio" name="m" checked /><span class="choice-radio"></span> Процент</label>
+          <label class="choice"><input type="radio" name="m" /><span class="choice-radio"></span> Абсолют</label>
+          <label class="choice"><input type="radio" name="m" /><span class="choice-radio"></span> max_price</label>
+        </div>
+        <h3 style="margin-top:16px;">Toggle</h3>
+        <div class="stack">
+          <label class="toggle"><input type="checkbox" checked /><span class="toggle-track"></span> Debug mode</label>
+          <label class="toggle"><input type="checkbox" /><span class="toggle-track"></span> Показывать архивные</label>
+        </div>
+      </div>
+    </div>
+
+    <h2>3. Diff</h2>
+    <div class="card">
+      <div class="row" style="margin:0 0 10px; justify-content:space-between;">
+        <span class="pill">Сезон: Высокий</span>
+        <button type="button" class="btn btn-primary" data-toast="Заменено">Заменить в конфиге</button>
+      </div>
+      <div class="diff">
+        <div class="diff-pane">
+          <div class="diff-head">Было</div>
+          <div class="diff-body">"hotel_title": "<span class="diff-del">Demo Hotel Old</span>"</div>
+        </div>
+        <div class="diff-pane">
+          <div class="diff-head">Будет</div>
+          <div class="diff-body">"hotel_title": "<span class="diff-add">Demo Hotel New</span>"</div>
+        </div>
+      </div>
+    </div>
+
+    <h2>4. Календарь (in-range читаемый)</h2>
+    <div class="grid-2">
+      <div class="card">
+        <div class="cal" id="cal">
+          <div class="cal-nav">
+            <button type="button" class="btn btn-icon" id="cal-prev">‹</button>
+            <strong id="cal-title">Март 2026</strong>
+            <button type="button" class="btn btn-icon" id="cal-next">›</button>
+          </div>
+          <div class="cal-weekdays">
+            <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+          <div class="cal-footer" id="cal-footer">Диапазон: endpoints = selected, середина = in-range</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Статусы</h3>
+        <div class="stack">
+          <div class="status">Сканирую…</div>
+          <div class="status ok">Сохранено</div>
+          <div class="status warn">Form не найдена</div>
+          <div class="status error">Ошибка валидации</div>
+          <div class="row">
+            <span class="pill">self</span>
+            <span class="pill">parsing</span>
+          </div>
+          <div class="row">
+            <button type="button" class="btn btn-accent-soft" data-toast="soft">Toast soft</button>
+            <button type="button" class="btn btn-primary" data-toast="ok">Toast ok</button>
+            <button type="button" class="btn" data-toast-error="fail">Toast error</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>5. Tabs / tooltip / menu / pagination / loader</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Tabs (разделы одного Toolkit)</h3>
+        <div class="tabs" role="tablist" id="toolkit-tabs">
+          <button type="button" class="tab active" data-tab="search">JSON Search</button>
+          <button type="button" class="tab" data-tab="competitors">Конкуренты</button>
+          <button type="button" class="tab" data-tab="bp">Base Price</button>
+        </div>
+        <div class="tab-panels">
+          <div class="tab-panel active" data-panel="search">
+            <p class="hint" style="margin:0;">Поиск / replace / diff — один объект toolkit.</p>
+          </div>
+          <div class="tab-panel" data-panel="competitors">
+            <p class="hint" style="margin:0;">Редактор конкурентов внутри того же окна.</p>
+          </div>
+          <div class="tab-panel" data-panel="bp">
+            <p class="hint" style="margin:0;">Base Price Maker — третья вкладка.</p>
+          </div>
+        </div>
+
+        <h3 style="margin-top:18px;">Tooltip</h3>
+        <div class="row" style="margin:0;">
+          <span>selfID</span>
+          <span class="tip">
+            <button type="button" class="tip-trigger" aria-label="Подсказка">?</button>
+            <span class="tip-bubble">Уникальный ID конфига. При sync parsing не перезаписывается.</span>
+          </span>
+          <span class="tip">
+            <button type="button" class="btn btn-accent-soft">Hover me</button>
+            <span class="tip-bubble" data-place="right">Tooltip справа от кнопки. И для иконок, и для длинных пояснений.</span>
+          </span>
+        </div>
+
+        <h3 style="margin-top:18px;">Dropdown menu</h3>
+        <div class="dropdown" id="demo-dropdown">
+          <button type="button" class="btn" id="dropdown-toggle">Действия ▾</button>
+          <div class="dropdown-menu" role="menu">
+            <button type="button" class="dropdown-item" data-toast="Пересканировать">Пересканировать</button>
+            <button type="button" class="dropdown-item" data-toast="Экспорт JSON">Экспорт JSON</button>
+            <div class="dropdown-sep"></div>
+            <button type="button" class="dropdown-item danger" data-toast="Сброс">Сбросить изменения</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Pagination</h3>
+        <div class="pagination" id="demo-pager">
+          <button type="button" class="page-btn" data-page="prev" disabled>‹</button>
+          <button type="button" class="page-btn active" data-page="1">1</button>
+          <button type="button" class="page-btn" data-page="2">2</button>
+          <button type="button" class="page-btn" data-page="3">3</button>
+          <button type="button" class="page-btn" data-page="next">›</button>
+          <span class="page-info" id="page-info">Конфиг 1 из 3</span>
+        </div>
+
+        <h3 style="margin-top:18px;">Loader / skeleton</h3>
+        <div class="row" style="margin:0;">
+          <div class="spinner" aria-label="loading"></div>
+          <span class="hint">Сканирую JSON…</span>
+        </div>
+        <div style="margin-top:12px;">
+          <div class="skeleton skeleton-line mid"></div>
+          <div class="skeleton skeleton-line"></div>
+          <div class="skeleton skeleton-line short"></div>
+        </div>
+
+        <h3 style="margin-top:18px;">Empty state</h3>
+        <div class="empty">
+          <h3>Нет совпадений</h3>
+          <p>По запросу <span class="mono">hotel_title</span> ничего не найдено. Попробуй другой термин.</p>
+          <button type="button" class="btn btn-primary" data-toast="Очистить поиск">Сбросить поиск</button>
+        </div>
+      </div>
+    </div>
+
+    <h2>6. Макет Admin (один launcher Toolkit)</h2>
+    <div class="fake-page">
+      <div class="fake-topbar">
+        <span>Django Admin · demo-hotel</span>
+        <span style="opacity:.7">UI Admin — через меню TM, не на странице</span>
+      </div>
+      <div class="fake-body">
+        <aside class="fake-nav">
+          <div class="active">Hotel</div>
+          <div>Seasons</div>
+        </aside>
+        <div class="fake-content">
+          <h3 style="margin-top:0;">Конфигурация</h3>
+          <div class="fake-block">textarea.for_jsoneditor</div>
+          <div class="dock">
+            <button type="button" class="btn btn-launcher" id="open-toolkit">Admin JSON Toolkit</button>
+          </div>
+
+          <div class="overlay" id="overlay-toolkit">
+            <div class="modal-shell" style="width:min(820px,100%);">
+              <div class="modal-head">
+                <div>
+                  <h3>Admin JSON Toolkit</h3>
+                  <p>Один объект · вкладки внутри</p>
+                </div>
+                <button type="button" class="btn" data-close="toolkit">Закрыть</button>
+              </div>
+              <div class="modal-body">
+                <div class="tabs" id="modal-tabs">
+                  <button type="button" class="tab active" data-tab="m-search">JSON Search</button>
+                  <button type="button" class="tab" data-tab="m-comp">Конкуренты</button>
+                  <button type="button" class="tab" data-tab="m-bp">Base Price</button>
+                </div>
+                <div class="tab-panels">
+                  <div class="tab-panel active" data-panel="m-search">
+                    <label class="field">Найти <input class="input" id="jsr-find" value="hotel_title" /></label>
+                    <label class="field" style="margin-top:8px;">Заменить <input class="input" id="jsr-replace" value="hotel_name" /></label>
+                    <div class="row">
+                      <button type="button" class="btn btn-accent-soft" id="jsr-search">Искать</button>
+                      <button type="button" class="btn btn-primary" id="jsr-diff">Diff</button>
+                      <button type="button" class="btn btn-accent-strong" id="jsr-apply">Применить всё</button>
+                      <span class="tip">
+                        <button type="button" class="tip-trigger">?</button>
+                        <span class="tip-bubble">Replace пишет в textarea + JSONEditor; Save Django — вручную.</span>
+                      </span>
+                    </div>
+                    <div id="jsr-results" class="stack" style="margin-top:10px;"></div>
+                  </div>
+                  <div class="tab-panel" data-panel="m-comp">
+                    <div class="competitor self"><span class="pill">self</span>
+                      <label class="field">Title <input class="input" value="My Hotel" /></label>
+                    </div>
+                    <div class="row">
+                      <button type="button" class="btn btn-accent-soft">Сохранить источник</button>
+                      <button type="button" class="btn btn-accent-strong" id="comp-save">+ сезоны</button>
+                    </div>
+                  </div>
+                  <div class="tab-panel" data-panel="m-bp">
+                    <label class="field">Источник
+                      <select class="select"><option>min_price</option><option>max_price</option></select>
+                    </label>
+                    <label class="toggle" style="margin-top:10px;"><input type="checkbox" checked /><span class="toggle-track"></span> Режим %</label>
+                    <div class="row">
+                      <button type="button" class="btn btn-primary" data-toast="BP apply">Применить BP</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      Канон зафиксирован: <span class="mono">retro</span> → <span class="mono">TOKENS.md</span> + Cursor rule. Остальные палитры в UI-kit оставлены.
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    (function () {
+      const body = document.body;
+      const toastEl = document.getElementById('toast');
+      const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+      let calYear = 2026, calMonth = 2, rangeStart = 10, rangeEnd = 18;
+      let page = 1;
+
+      function showToast(msg, isError) {
+        toastEl.textContent = msg;
+        toastEl.classList.toggle('error', !!isError);
+        toastEl.classList.add('show');
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => toastEl.classList.remove('show'), 2200);
+      }
+
+      function setPalette(name) {
+        body.setAttribute('data-palette', name);
+        document.querySelectorAll('[data-palette-card]').forEach((c) => {
+          c.classList.toggle('active', c.getAttribute('data-palette-card') === name);
+        });
+        const radio = document.querySelector('input[name="palette"][value="' + name + '"]');
+        if (radio) radio.checked = true;
+      }
+
+      document.querySelectorAll('input[name="palette"]').forEach((el) => {
+        el.addEventListener('change', () => setPalette(el.value));
+      });
+      document.querySelectorAll('[data-palette-card]').forEach((card) => {
+        card.addEventListener('click', () => setPalette(card.getAttribute('data-palette-card')));
+      });
+      document.querySelectorAll('[data-toast]').forEach((btn) => {
+        btn.addEventListener('click', () => showToast(btn.getAttribute('data-toast')));
+      });
+      document.querySelectorAll('[data-toast-error]').forEach((btn) => {
+        btn.addEventListener('click', () => showToast(btn.getAttribute('data-toast-error'), true));
+      });
+
+      function bindTabs(root) {
+        if (!root) return;
+        const host = root.parentElement;
+        const tabs = root.querySelectorAll('.tab');
+        tabs.forEach((tab) => {
+          tab.addEventListener('click', () => {
+            const id = tab.getAttribute('data-tab');
+            tabs.forEach((t) => t.classList.toggle('active', t === tab));
+            host.querySelectorAll(':scope > .tab-panels > .tab-panel').forEach((p) => {
+              p.classList.toggle('active', p.getAttribute('data-panel') === id);
+            });
+          });
+        });
+      }
+      bindTabs(document.getElementById('toolkit-tabs'));
+      bindTabs(document.getElementById('modal-tabs'));
+
+      // Range
+      const range = document.getElementById('demo-range');
+      const rangeLabel = document.getElementById('range-label');
+      function syncRange() {
+        if (!range) return;
+        range.style.setProperty('--range-pct', range.value + '%');
+        if (rangeLabel) rangeLabel.textContent = range.value + '%';
+      }
+      if (range) {
+        range.addEventListener('input', syncRange);
+        syncRange();
+      }
+
+      // Dropdown
+      const dd = document.getElementById('demo-dropdown');
+      const ddToggle = document.getElementById('dropdown-toggle');
+      if (ddToggle) {
+        ddToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dd.classList.toggle('open');
+        });
+        document.addEventListener('click', () => dd.classList.remove('open'));
+      }
+
+      // Pagination
+      function renderPager() {
+        const info = document.getElementById('page-info');
+        if (info) info.textContent = 'Конфиг ' + page + ' из 3';
+        document.querySelectorAll('#demo-pager .page-btn').forEach((btn) => {
+          const p = btn.getAttribute('data-page');
+          if (p === 'prev') btn.disabled = page <= 1;
+          else if (p === 'next') btn.disabled = page >= 3;
+          else btn.classList.toggle('active', Number(p) === page);
+        });
+      }
+      document.querySelectorAll('#demo-pager .page-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const p = btn.getAttribute('data-page');
+          if (p === 'prev') page = Math.max(1, page - 1);
+          else if (p === 'next') page = Math.min(3, page + 1);
+          else page = Number(p);
+          renderPager();
+        });
+      });
+      renderPager();
+
+      function openOverlay(id) { document.getElementById(id).classList.add('open'); }
+      function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+      document.getElementById('open-toolkit').addEventListener('click', () => openOverlay('overlay-toolkit'));
+      document.querySelectorAll('[data-close]').forEach((btn) => {
+        btn.addEventListener('click', () => closeOverlay('overlay-' + btn.getAttribute('data-close')));
+      });
+      document.querySelectorAll('.overlay').forEach((ov) => {
+        ov.addEventListener('click', (e) => { if (e.target === ov) ov.classList.remove('open'); });
+      });
+
+      document.getElementById('jsr-search').addEventListener('click', () => {
+        document.getElementById('jsr-results').innerHTML =
+          '<div class="card" style="padding:10px;"><strong>Найдено</strong><div class="mono" style="margin-top:6px;">"hotel_title"</div></div>';
+        showToast('Найдено');
+      });
+      document.getElementById('jsr-diff').addEventListener('click', () => {
+        const a = document.getElementById('jsr-find').value;
+        const b = document.getElementById('jsr-replace').value;
+        document.getElementById('jsr-results').innerHTML =
+          '<div class="diff"><div class="diff-pane"><div class="diff-head">Было</div><div class="diff-body"><span class="diff-del">' + a +
+          '</span></div></div><div class="diff-pane"><div class="diff-head">Будет</div><div class="diff-body"><span class="diff-add">' + b +
+          '</span></div></div></div>';
+      });
+      document.getElementById('jsr-apply').addEventListener('click', () => showToast('Применено ко всем'));
+      document.getElementById('comp-save').addEventListener('click', () => showToast('Источник + сезоны'));
+
+      function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
+      function startWeekday(y, m) { return (new Date(y, m, 1).getDay() + 6) % 7; }
+
+      function renderCal() {
+        document.getElementById('cal-title').textContent = MONTHS[calMonth] + ' ' + calYear;
+        const grid = document.getElementById('cal-grid');
+        grid.innerHTML = '';
+        const dim = daysInMonth(calYear, calMonth);
+        const start = startWeekday(calYear, calMonth);
+        const prevDim = daysInMonth(calYear, calMonth === 0 ? 11 : calMonth - 1);
+        const today = 12;
+        const lo = Math.min(rangeStart, rangeEnd);
+        const hi = Math.max(rangeStart, rangeEnd);
+
+        for (let i = 0; i < 42; i++) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'cal-day';
+          let dayNum, muted = false;
+          if (i < start) { dayNum = prevDim - start + i + 1; muted = true; }
+          else if (i >= start + dim) { dayNum = i - start - dim + 1; muted = true; }
+          else { dayNum = i - start + 1; }
+          btn.textContent = String(dayNum);
+          if (muted) btn.classList.add('muted');
+          if (!muted && dayNum === today) btn.classList.add('today');
+          if (!muted && dayNum > lo && dayNum < hi) btn.classList.add('in-range');
+          if (!muted && (dayNum === lo || dayNum === hi)) {
+            btn.classList.add('selected');
+            if (lo !== hi) btn.classList.add('in-range');
+          }
+          if (!muted) {
+            btn.addEventListener('click', () => {
+              if (rangeStart !== rangeEnd) { rangeStart = dayNum; rangeEnd = dayNum; }
+              else { rangeEnd = dayNum; }
+              const a = Math.min(rangeStart, rangeEnd);
+              const b = Math.max(rangeStart, rangeEnd);
+              document.getElementById('cal-footer').textContent =
+                a === b ? ('Выбрано: ' + a) : ('Диапазон: ' + a + '–' + b + ' (середина = in-range)');
+              renderCal();
+            });
+          }
+          grid.appendChild(btn);
+        }
+      }
+
+      document.getElementById('cal-prev').addEventListener('click', () => {
+        calMonth -= 1; if (calMonth < 0) { calMonth = 11; calYear -= 1; } renderCal();
+      });
+      document.getElementById('cal-next').addEventListener('click', () => {
+        calMonth += 1; if (calMonth > 11) { calMonth = 0; calYear += 1; } renderCal();
+      });
+      renderCal();
+    })();
+  </script>
+</body>
+</html>

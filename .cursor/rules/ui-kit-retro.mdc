@@ -1,0 +1,45 @@
+---
+description: Use shared Retro UI kit and patterns for all Tampermonkey/userscript UI in this repo
+alwaysApply: true
+---
+
+# HotelLab userscripts — UI kit canon
+
+When working on **any** userscript, Admin JSON Toolkit, UI Admin, or new Tampermonkey UI in this repository:
+
+## Must read first
+
+1. [`shared/ui-kit/TOKENS.md`](shared/ui-kit/TOKENS.md) — **canonical theme = Retro (dark)**
+2. [`shared/ui-kit/index.html`](shared/ui-kit/index.html) — living component gallery
+3. [`shared/PATTERNS.md`](shared/PATTERNS.md) — code patterns (find editors, writeJson, dock, etc.)
+4. [`shared/ui-kit/README.md`](shared/ui-kit/README.md) — short entry
+5. [`shared/logging/LOGGING.md`](shared/logging/LOGGING.md) + [`shared/logging/hlt-log.js`](shared/logging/hlt-log.js) — **canonical console logging**
+6. [`shared/logging/index.html`](shared/logging/index.html) — logging simulation gallery
+
+## Visual rules
+
+- **Palette:** Retro only in production code (`--hlt-accent: #6fcb9f`, strong CTA `#fb2e01`, soft olive `#666547`). Other palettes in the HTML preview are experiments — do not ship them unless the user asks to change the canon.
+- **Mode:** dark only.
+- **Fonts:** Source Sans 3 (UI) + JetBrains Mono (code/JSON). Prefer system fallback stacks in userscripts; do not load Google Fonts in TM unless requested.
+- **Class prefix:** `hlt-` for injected CSS/DOM.
+- **Buttons:** use the soft → primary → strong scale from the kit; not ad-hoc colors.
+- **Calendar selected/in-range:** use token variables (`--hlt-accent` / `--hlt-cal-range-*`), never hardcode lime/green from old themes.
+- **Components:** reuse kit patterns (tabs, tooltip, toggle, dropdown, pagination, diff, toast, empty, skeleton) instead of inventing new ones.
+
+## Product UX
+
+- **Admin JSON Toolkit** (JSON Search + Competitors + Base Price): **one** on-page launcher; sections via **tabs** inside one shell.
+- **UI Admin**: separate userscript; settings via **Tampermonkey menu** (`GM_registerMenuCommand`), not a floating page button.
+- Do not put UI Admin into the toolkit dock.
+
+## Code patterns
+
+Follow `shared/PATTERNS.md`: `.for_jsoneditor` (+ fallback), `getEditorLabel`, `writeJson` (+ `window.jsonEditors`), escapeHtml/toast, IIFE, `@match` for hotellab + revlab AdminOnly.
+
+## Console logging
+
+Use `HLTLog` from `shared/logging/hlt-log.js` (see `LOGGING.md`). Namespaces like `Toolkit/JSR`, levels `debug|info|ok|warn|error`, Retro `%c` badges. Do not invent ad-hoc `[HL …]` prefixes for new code.
+
+## When the user says “use the toolkit / our styles / как в ui-kit”
+
+They mean: Retro tokens + components from `shared/ui-kit/`, patterns from `shared/PATTERNS.md`. Open those files and match them.
